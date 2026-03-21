@@ -44,10 +44,19 @@ final class SearchView: BaseView {
         return searchBar
     }()
     
+    let searchResultTableView: UITableView = {
+        let tv = UITableView()
+        tv.backgroundColor = .clear
+        tv.separatorStyle = .none
+        tv.isHidden = true // 처음에는 숨김 처리
+        return tv
+    }()
+    
     // MARK: - Setup
     override func setupHierarchy() {
         addSubview(titleLabel)
         addSubview(searchBar)
+        addSubview(searchResultTableView)
     }
     
     override func setupConstraints() {
@@ -60,6 +69,11 @@ final class SearchView: BaseView {
             $0.top.equalTo(titleLabel.snp.bottom).offset(AppSpacing.md)
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.sm)
             $0.height.equalTo(56)
+        }
+        
+        searchResultTableView.snp.makeConstraints {
+            $0.top.equalTo(searchBar.snp.bottom).offset(AppSpacing.md)
+            $0.leading.trailing.bottom.equalToSuperview()
         }
     }
     
