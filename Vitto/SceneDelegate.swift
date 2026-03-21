@@ -6,11 +6,12 @@
 //
 
 import UIKit
+import RxSwift
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
-
+    private let disposeBag = DisposeBag()
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
@@ -18,6 +19,24 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.rootViewController = MainTabBarController()
         window.makeKeyAndVisible()
         self.window = window
+
+        checkAppleMusicSubscription()
+    }
+
+    // MARK: - Apple Music 구독 체크
+
+    private func checkAppleMusicSubscription() {
+        MusicService.shared.checkSubscriptionStatus()
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onNext: { isSubscribed in
+                    print("[SceneDelegate] Apple Music 구독 여부: \(isSubscribed)")
+                },
+                onError: { error in
+                    print("[SceneDelegate] Apple Music 구독 확인 실패: \(error)")
+                }
+            )
+            .disposed(by: disposeBag)
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
