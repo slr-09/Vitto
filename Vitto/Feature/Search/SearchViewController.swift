@@ -31,6 +31,28 @@ final class SearchViewController: BaseViewController {
         output.searchResults
             .drive(with: self) { owner, songs in
                 print("=== 검색 결과: \(songs.count)곡 ===")
+                
+                // 검색 결과가 도출되면 결과 뷰를 띄움
+                if !songs.isEmpty {
+                    UIView.animate(withDuration: 0.3) {
+                        owner.searchView.searchResultTableView.isHidden = false
+                        owner.searchView.searchResultTableView.alpha = 1.0
+                    }
+                }
+                
+                // 첫 번째 곡을 Top Result 카드로 세팅
+                if let topSong = songs.first {
+                    owner.searchView.topResultCard.configure(
+                        image: nil, // 추후 이미지 URL 주입 가능
+                        title: topSong.title,
+                        subtitle: topSong.artist,
+                        badgeText: "Song"
+                    )
+                    owner.searchView.topResultCard.isHidden = false
+                } else {
+                    owner.searchView.topResultCard.isHidden = true
+                }
+                
                 songs.forEach { song in
                     print("🎵 \(song.title) - \(song.artist) (\(song.durationFormatted))")
                 }
@@ -45,15 +67,10 @@ final class SearchViewController: BaseViewController {
             }
             .disposed(by: disposeBag)
 
-        // 검색창 포커스 시 검색 결과 뷰 표시
+        // 검색창 포커스 (Cancel 버튼만 표시)
         searchView.searchBar.rx.textDidBeginEditing
             .subscribe(with: self) { owner, _ in
                 owner.searchView.searchBar.setShowsCancelButton(true, animated: true)
-
-                UIView.animate(withDuration: 0.3) {
-                    owner.searchView.searchResultTableView.isHidden = false
-                    owner.searchView.searchResultTableView.alpha = 1.0
-                }
             }
             .disposed(by: disposeBag)
 

@@ -52,11 +52,17 @@ final class SearchView: BaseView {
         return tv
     }()
     
+    let topResultCard = TopResultCardView()
+    private let tableHeaderContainer = UIView()
+    
     // MARK: - Setup
     override func setupHierarchy() {
         addSubview(titleLabel)
         addSubview(searchBar)
         addSubview(searchResultTableView)
+        
+        tableHeaderContainer.addSubview(topResultCard)
+        searchResultTableView.tableHeaderView = tableHeaderContainer
     }
     
     override func setupConstraints() {
@@ -74,6 +80,28 @@ final class SearchView: BaseView {
         searchResultTableView.snp.makeConstraints {
             $0.top.equalTo(searchBar.snp.bottom).offset(AppSpacing.md)
             $0.leading.trailing.bottom.equalToSuperview()
+        }
+        
+        topResultCard.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(AppSpacing.sm)
+            $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
+            $0.bottom.equalToSuperview().offset(-AppSpacing.lg)
+            // 명시적 높이 지정으로 AutoLayout이 크기를 잡게 함
+            $0.height.equalTo(200)
+        }
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // 테이블 뷰 헤더의 동적 높이 계산 및 업데이트
+        if let headerView = searchResultTableView.tableHeaderView {
+            let height = headerView.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height
+            if headerView.frame.size.height != height {
+                var frame = headerView.frame
+                frame.size.height = height
+                headerView.frame = frame
+                searchResultTableView.tableHeaderView = headerView
+            }
         }
     }
     
