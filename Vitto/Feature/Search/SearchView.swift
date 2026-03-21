@@ -49,6 +49,7 @@ final class SearchView: BaseView {
         tv.backgroundColor = .clear
         tv.separatorStyle = .none
         tv.isHidden = true // 처음에는 숨김 처리
+        tv.register(SearchResultCell.self, forCellReuseIdentifier: SearchResultCell.identifier)
         return tv
     }()
     

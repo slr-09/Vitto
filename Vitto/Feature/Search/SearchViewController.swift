@@ -30,8 +30,6 @@ final class SearchViewController: BaseViewController {
 
         output.searchResults
             .drive(with: self) { owner, songs in
-                print("=== 검색 결과: \(songs.count)곡 ===")
-                
                 // 검색 결과가 도출되면 결과 뷰를 띄움
                 if !songs.isEmpty {
                     UIView.animate(withDuration: 0.3) {
@@ -39,7 +37,7 @@ final class SearchViewController: BaseViewController {
                         owner.searchView.searchResultTableView.alpha = 1.0
                     }
                 }
-                
+
                 // 첫 번째 곡을 Top Result 카드로 세팅
                 if let topSong = songs.first {
                     owner.searchView.topResultCard.configure(
@@ -52,10 +50,19 @@ final class SearchViewController: BaseViewController {
                 } else {
                     owner.searchView.topResultCard.isHidden = true
                 }
-                
-                songs.forEach { song in
-                    print("🎵 \(song.title) - \(song.artist) (\(song.durationFormatted))")
-                }
+            }
+            .disposed(by: disposeBag)
+
+        // 나머지 검색 결과를 테이블뷰에 바인딩
+        output.searchResults
+            .map { Array($0.dropFirst()) }
+            .drive(
+                searchView.searchResultTableView.rx.items(
+                    cellIdentifier: SearchResultCell.identifier,
+                    cellType: SearchResultCell.self
+                )
+            ) { _, music, cell in
+                cell.configure(with: music)
             }
             .disposed(by: disposeBag)
 
