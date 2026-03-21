@@ -7,10 +7,13 @@
 
 import Foundation
 import MusicKit
+import MediaPlayer
 import RxSwift
 
 enum MusicServiceError: Error {
     case notAuthorized
+    case notSubscribed
+    case songNotFound
 }
 
 final class MusicService {
@@ -21,6 +24,68 @@ final class MusicService {
 
     /// 현재 구독 상태를 앱 전역에서 참조할 수 있도록 저장
     private(set) var isSubscribed: Bool = false
+
+    private let player = ApplicationMusicPlayer.shared
+
+    // MARK: - 음악 재생
+
+    /// musicID로 곡을 재생합니다.
+    func play(musicID: String) -> Observable<Void> {
+        return Observable.create { [weak self] observer in
+            guard let self else { return Disposables.create() }
+
+            guard self.isSubscribed else {
+                print("[MusicService] 구독되지 않은 사용자입니다.")
+                observer.onError(MusicServiceError.notSubscribed)
+                return Disposables.create()
+            }
+
+            Task {
+                do {
+                    let request = MusicCatalogResourceRequest<Song>(
+                        matching: \.id,
+                        equalTo: MusicItemID(musicID)
+                    )
+                    let response = try await request.response()
+
+                    guard let song = response.items.first else {
+                        print("[MusicService] 곡을 찾을 수 없습니다: \(musicID)")
+                        observer.onError(MusicServiceError.songNotFound)
+                        return
+                    }
+
+                    self.player.queue = [song]
+                    try await self.player.play()
+
+                    print("[MusicService] 재생 시작: \(song.title) - \(song.artistName)")
+                    observer.onNext(())
+                    observer.onCompleted()
+                } catch {
+                    print("[MusicService] 재생 실패: \(error)")
+                    observer.onError(error)
+                }
+            }
+            return Disposables.create()
+        }
+    }
+
+    /// 일시정지
+    func pause() {
+        player.pause()
+        print("[MusicService] 일시정지")
+    }
+
+    /// 재개
+    func resume() async throws {
+        try await player.play()
+        print("[MusicService] 재생 재개")
+    }
+
+    /// 정지
+    func stop() {
+        player.stop()
+        print("[MusicService] 정지")
+    }
 
     // MARK: - 음악 검색
 

@@ -22,8 +22,12 @@ final class SearchViewController: BaseViewController {
         let searchButtonClicked = searchView.searchBar.rx.searchButtonClicked
             .withLatestFrom(searchView.searchBar.rx.text.orEmpty)
 
+        let itemSelected = searchView.searchResultTableView.rx.modelSelected(Music.self)
+            .asObservable()
+
         let input = SearchViewModel.Input(
-            searchButtonClicked: searchButtonClicked
+            searchButtonClicked: searchButtonClicked,
+            itemSelected: itemSelected
         )
 
         let output = viewModel.transform(input: input)

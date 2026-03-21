@@ -6,6 +6,7 @@ final class SearchViewModel: ViewModelType {
 
     struct Input {
         let searchButtonClicked: Observable<String>
+        let itemSelected: Observable<Music>
     }
 
     struct Output {
@@ -25,6 +26,17 @@ final class SearchViewModel: ViewModelType {
                     }
             }
             .asDriver(onErrorJustReturn: [])
+
+        input.itemSelected
+            .flatMapLatest { music in
+                MusicService.shared.play(musicID: music.musicID)
+                    .catch { error in
+                        print("재생 에러: \(error)")
+                        return .empty()
+                    }
+            }
+            .subscribe()
+            .disposed(by: disposeBag)
 
         return Output(searchResults: results)
     }
