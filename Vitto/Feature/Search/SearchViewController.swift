@@ -43,7 +43,7 @@ final class SearchViewController: BaseViewController {
                 // 첫 번째 곡을 Top Result 카드로 세팅
                 if let topSong = songs.first {
                     owner.searchView.topResultCard.configure(
-                        image: nil, // 추후 이미지 URL 주입 가능
+                        imageURL: topSong.artworkUrl,
                         title: topSong.title,
                         subtitle: topSong.artist,
                         badgeText: "Song"

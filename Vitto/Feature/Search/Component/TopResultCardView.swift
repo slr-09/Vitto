@@ -1,5 +1,6 @@
 import UIKit
 import SnapKit
+import Kingfisher
 
 final class TopResultCardView: BaseView {
     
@@ -114,17 +115,21 @@ final class TopResultCardView: BaseView {
     }
     
     // MARK: - Configure
-    func configure(image: UIImage?, title: String, subtitle: String, badgeText: String) {
-        if let image = image {
-            imageView.image = image
+    func configure(imageURL: String?, title: String, subtitle: String, badgeText: String) {
+        if let imageURL, let url = URL(string: imageURL) {
+            imageView.kf.setImage(
+                with: url,
+                placeholder: nil,
+                options: [.transition(.fade(0.2))]
+            )
         } else {
-            // 더미 이미지 또는 플레이스홀더 설정
+            imageView.image = nil
             imageView.backgroundColor = AppColor.surfaceVariant
         }
         titleLabel.text = title
         subtitleLabel.text = subtitle
         badgeLabel.text = badgeText
-        
+
         // 뱃지 텍스트가 없으면 숨김 처리
         badgeContainer.isHidden = badgeText.isEmpty
     }
