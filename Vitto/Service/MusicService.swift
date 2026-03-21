@@ -9,6 +9,7 @@ import Foundation
 import MusicKit
 import MediaPlayer
 import RxSwift
+import RxCocoa
 
 enum MusicServiceError: Error {
     case notAuthorized
@@ -26,6 +27,13 @@ final class MusicService {
     private(set) var isSubscribed: Bool = false
 
     private let player = ApplicationMusicPlayer.shared
+
+    // MARK: - App State (MiniPlayer 등에서 관찰)
+    let currentMusic = BehaviorRelay<Music?>(value: nil)
+    let isPlaying = BehaviorRelay<Bool>(value: false)
+    let playbackTime = BehaviorRelay<TimeInterval>(value: 0)
+    
+    private var progressTimer: Timer?
 
     // MARK: - 음악 재생
 
@@ -57,10 +65,25 @@ final class MusicService {
                     self.player.queue = [song]
                     try await self.player.play()
 
+                    let playingMusic = Music(
+                        musicID: song.id.rawValue,
+                        title: song.title,
+                        artist: song.artistName,
+                        totalDurationMs: Int((song.duration ?? 0) * 1000),
+                        isrc: song.isrc ?? "",
+                        albumTitle: song.albumTitle ?? "",
+                        artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? ""
+                    )
+                    self.currentMusic.accept(playingMusic)
+                    self.isPlaying.accept(true)
+                    self.startProgressTimer()
+
                     print("[MusicService] 재생 시작: \(song.title) - \(song.artistName)")
                     observer.onNext(())
                     observer.onCompleted()
                 } catch {
+                    self.isPlaying.accept(false)
+                    self.stopProgressTimer()
                     print("[MusicService] 재생 실패: \(error)")
                     observer.onError(error)
                 }
@@ -72,19 +95,48 @@ final class MusicService {
     /// 일시정지
     func pause() {
         player.pause()
+        isPlaying.accept(false)
+        stopProgressTimer()
         print("[MusicService] 일시정지")
     }
 
     /// 재개
     func resume() async throws {
         try await player.play()
+        isPlaying.accept(true)
+        startProgressTimer()
         print("[MusicService] 재생 재개")
     }
 
     /// 정지
     func stop() {
         player.stop()
+        isPlaying.accept(false)
+        currentMusic.accept(nil)
+        playbackTime.accept(0)
+        stopProgressTimer()
         print("[MusicService] 정지")
+    }
+    
+    /// 다음 곡
+    func skipToNextEntry() async throws {
+        try await player.skipToNextEntry()
+        print("[MusicService] 다음 곡 재생")
+    }
+    
+    // MARK: - Progress Timer
+    
+    private func startProgressTimer() {
+        stopProgressTimer()
+        progressTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            self.playbackTime.accept(self.player.playbackTime)
+        }
+    }
+    
+    private func stopProgressTimer() {
+        progressTimer?.invalidate()
+        progressTimer = nil
     }
 
     // MARK: - 음악 검색
