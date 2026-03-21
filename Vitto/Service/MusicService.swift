@@ -5,6 +5,7 @@
 //  Created by 가은 on 3/21/26.
 //
 
+import Foundation
 import MusicKit
 import RxSwift
 
@@ -20,6 +21,39 @@ final class MusicService {
 
     /// 현재 구독 상태를 앱 전역에서 참조할 수 있도록 저장
     private(set) var isSubscribed: Bool = false
+
+    // MARK: - 음악 검색
+
+    func searchMusic(query: String) -> Observable<[Music]> {
+        return Observable.create { observer in
+            Task {
+                do {
+                    var request = MusicCatalogSearchRequest(term: query, types: [Song.self])
+                    request.limit = 20
+                    let response = try await request.response()
+
+                    let songs = response.songs.map { song in
+                        Music(
+                            musicID: song.id.rawValue,
+                            title: song.title,
+                            artist: song.artistName,
+                            totalDurationMs: Int((song.duration ?? 0) * 1000),
+                            isrc: song.isrc ?? "",
+                            albumTitle: song.albumTitle ?? "",
+                            artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? ""
+                        )
+                    }
+
+                    observer.onNext(songs)
+                    observer.onCompleted()
+                } catch {
+                    print("[MusicService] 검색 실패: \(error)")
+                    observer.onError(error)
+                }
+            }
+            return Disposables.create()
+        }
+    }
 
     // MARK: - 권한 요청 + 구독 상태 확인
 
