@@ -172,6 +172,115 @@ final class MusicService {
         }
     }
 
+    // MARK: - 장르 조회
+
+    /// Apple Music 카탈로그에서 전체 장르 목록을 가져옵니다.
+    func fetchGenres() -> Observable<[Genre]> {
+        return Observable.create { observer in
+            Task {
+                do {
+                    let countryCode = try await MusicDataRequest.currentCountryCode
+                    let url = URL(string: "https://api.music.apple.com/v1/catalog/\(countryCode)/genres")!
+                    
+                    let request = MusicDataRequest(urlRequest: URLRequest(url: url))
+                    let response = try await request.response()
+                    let genres = try JSONDecoder().decode(MusicItemCollection<Genre>.self, from: response.data)
+
+                    print("[MusicService] 장르 조회 완료: \(genres.count)개")
+                    dump(genres)
+                    
+                    observer.onNext(Array(genres))
+                    observer.onCompleted()
+                } catch {
+                    print("[MusicService] 장르 조회 실패: \(error)")
+                    observer.onError(error)
+                }
+            }
+            return Disposables.create()
+        }
+    }
+
+    /// 장르명으로 노래를 검색합니다.
+    func searchSongs(byGenreName name: String) -> Observable<[Music]> {
+        return Observable.create { observer in
+            Task {
+                do {
+                    var request = MusicCatalogSearchRequest(term: name, types: [Song.self])
+                    request.limit = 20
+                    let response = try await request.response()
+
+                    let songs = response.songs.map { song in
+                        Music(
+                            musicID: song.id.rawValue,
+                            title: song.title,
+                            artist: song.artistName,
+                            totalDurationMs: Int((song.duration ?? 0) * 1000),
+                            isrc: song.isrc ?? "",
+                            albumTitle: song.albumTitle ?? "",
+                            artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? ""
+                        )
+                    }
+
+                    print("[MusicService] 장르명 검색 완료: \(name) → \(songs.count)곡")
+                    observer.onNext(songs)
+                    observer.onCompleted()
+                } catch {
+                    print("[MusicService] 장르명 검색 실패: \(error)")
+                    observer.onError(error)
+                }
+            }
+            return Disposables.create()
+        }
+    }
+
+    /// 장르 ID로 인기곡 차트를 가져옵니다.
+    func searchSongs(byGenreID genreID: MusicItemID) -> Observable<[Music]> {
+        return Observable.create { observer in
+            Task {
+                do {
+                    // 1. Genre 객체 조회
+                    let genreRequest = MusicCatalogResourceRequest<Genre>(
+                        matching: \.id,
+                        equalTo: genreID
+                    )
+                    let genreResponse = try await genreRequest.response()
+
+                    guard let genre = genreResponse.items.first else {
+                        print("[MusicService] 장르 ID를 찾을 수 없음: \(genreID)")
+                        observer.onNext([])
+                        observer.onCompleted()
+                        return
+                    }
+
+                    // 2. 해당 장르 인기곡 차트 조회
+                    var chartRequest = MusicCatalogChartsRequest(genre: genre, types: [])
+                    chartRequest.limit = 20
+                    let chartResponse = try await chartRequest.response()
+
+                    let songs = (chartResponse.songCharts.first?.items ?? []).map { song in
+                        Music(
+                            musicID: song.id.rawValue,
+                            title: song.title,
+                            artist: song.artistName,
+                            totalDurationMs: Int((song.duration ?? 0) * 1000),
+                            isrc: song.isrc ?? "",
+                            albumTitle: song.albumTitle ?? "",
+                            artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? ""
+                        )
+                    }
+
+                    print("[MusicService] 장르 ID 차트 조회 완료: \(genre.name) → \(songs.count)곡")
+                    observer.onNext(songs)
+                    observer.onCompleted()
+                } catch {
+                    print("[MusicService] 장르 ID 검색 실패: \(error)")
+                    observer.onError(error)
+                }
+            }
+            return Disposables.create()
+        }
+    }
+
     // MARK: - 권한 요청 + 구독 상태 확인
 
     /// MusicKit 권한을 요청하고, Apple Music 구독 상태를 확인합니다.

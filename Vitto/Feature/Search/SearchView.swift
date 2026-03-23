@@ -44,6 +44,44 @@ final class SearchView: BaseView {
         return searchBar
     }()
     
+    // MARK: - Genre Section
+    let genreSectionView = UIView()
+
+    private let genreSectionLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Explore Genres"
+        label.font = AppFont.h2
+        label.textColor = AppColor.onBackground
+        return label
+    }()
+
+    private let genreGridView: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .vertical
+        sv.spacing = AppSpacing.sm
+        sv.distribution = .fillEqually
+        return sv
+    }()
+
+    private let genreTopRow: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .horizontal
+        sv.spacing = AppSpacing.sm
+        sv.distribution = .fillEqually
+        return sv
+    }()
+
+    private let genreBottomRow: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .horizontal
+        sv.spacing = AppSpacing.sm
+        sv.distribution = .fillEqually
+        return sv
+    }()
+
+    let genreChipViews: [GenreChipView] = (0..<4).map { _ in GenreChipView() }
+
+    // MARK: - Search Result
     let searchResultTableView: UITableView = {
         let tv = UITableView()
         tv.backgroundColor = .clear
@@ -60,8 +98,18 @@ final class SearchView: BaseView {
     override func setupHierarchy() {
         addSubview(titleLabel)
         addSubview(searchBar)
+        addSubview(genreSectionView)
         addSubview(searchResultTableView)
-        
+
+        genreSectionView.addSubview(genreSectionLabel)
+        genreSectionView.addSubview(genreGridView)
+        genreGridView.addArrangedSubview(genreTopRow)
+        genreGridView.addArrangedSubview(genreBottomRow)
+        genreTopRow.addArrangedSubview(genreChipViews[0])
+        genreTopRow.addArrangedSubview(genreChipViews[1])
+        genreBottomRow.addArrangedSubview(genreChipViews[2])
+        genreBottomRow.addArrangedSubview(genreChipViews[3])
+
         tableHeaderContainer.addSubview(topResultCard)
         searchResultTableView.tableHeaderView = tableHeaderContainer
     }
@@ -78,6 +126,26 @@ final class SearchView: BaseView {
             $0.height.equalTo(56)
         }
         
+        genreSectionView.snp.makeConstraints {
+            $0.top.equalTo(searchBar.snp.bottom).offset(AppSpacing.lg)
+            $0.leading.trailing.equalToSuperview()
+        }
+
+        genreSectionLabel.snp.makeConstraints {
+            $0.top.equalToSuperview()
+            $0.leading.equalToSuperview().inset(AppSpacing.screenHorizontal)
+        }
+
+        genreGridView.snp.makeConstraints {
+            $0.top.equalTo(genreSectionLabel.snp.bottom).offset(AppSpacing.md)
+            $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
+            $0.bottom.equalToSuperview()
+        }
+
+        genreChipViews.forEach {
+            $0.snp.makeConstraints { $0.height.equalTo(56) }
+        }
+
         searchResultTableView.snp.makeConstraints {
             $0.top.equalTo(searchBar.snp.bottom).offset(AppSpacing.md)
             $0.leading.trailing.bottom.equalToSuperview()
