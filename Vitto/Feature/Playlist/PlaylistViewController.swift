@@ -58,6 +58,13 @@ final class PlaylistViewController: BaseViewController {
                 self?.playlistView.updateEmptyState(isEmpty: playlists.isEmpty)
             })
             .disposed(by: disposeBag)
+
+        playlistView.collectionView.rx.modelSelected(Playlist.self)
+            .subscribe(onNext: { [weak self] playlist in
+                let detailVC = PlaylistDetailViewController(playlist: playlist)
+                self?.navigationController?.pushViewController(detailVC, animated: true)
+            })
+            .disposed(by: disposeBag)
     }
 
     private func showCreatePlaylistAlert() {
