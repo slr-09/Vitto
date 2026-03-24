@@ -13,6 +13,11 @@ final class CoreDataStack {
             name: "Vitto",
             managedObjectModel: Self.managedObjectModel
         )
+        // 새 엔티티 추가 시 lightweight migration 지원
+        if let description = container.persistentStoreDescriptions.first {
+            description.setOption(true as NSNumber, forKey: NSMigratePersistentStoresAutomaticallyOption)
+            description.setOption(true as NSNumber, forKey: NSInferMappingModelAutomaticallyOption)
+        }
         container.loadPersistentStores { _, error in
             if let error = error as NSError? {
                 fatalError("[CoreDataStack] 저장소 로드 실패: \(error)")
@@ -120,6 +125,54 @@ final class CoreDataStack {
         moodRawValue.name = "moodRawValue"
         moodRawValue.attributeType = .stringAttributeType
 
+        // MARK: PlaylistEntity
+        let playlistEntity = NSEntityDescription()
+        playlistEntity.name = "PlaylistEntity"
+        playlistEntity.managedObjectClassName = NSStringFromClass(PlaylistEntity.self)
+
+        let playlistID = NSAttributeDescription()
+        playlistID.name = "id"
+        playlistID.attributeType = .UUIDAttributeType
+
+        let playlistName = NSAttributeDescription()
+        playlistName.name = "name"
+        playlistName.attributeType = .stringAttributeType
+
+        let playlistDescription = NSAttributeDescription()
+        playlistDescription.name = "playlistDescription"
+        playlistDescription.attributeType = .stringAttributeType
+        playlistDescription.isOptional = true
+
+        let coverImageUrl = NSAttributeDescription()
+        coverImageUrl.name = "coverImageUrl"
+        coverImageUrl.attributeType = .stringAttributeType
+        coverImageUrl.isOptional = true
+
+        let playlistCreatedAt = NSAttributeDescription()
+        playlistCreatedAt.name = "createdAt"
+        playlistCreatedAt.attributeType = .dateAttributeType
+
+        let playlistUpdatedAt = NSAttributeDescription()
+        playlistUpdatedAt.name = "updatedAt"
+        playlistUpdatedAt.attributeType = .dateAttributeType
+
+        // MARK: PlaylistItem
+        let playlistItemEntity = NSEntityDescription()
+        playlistItemEntity.name = "PlaylistItem"
+        playlistItemEntity.managedObjectClassName = NSStringFromClass(PlaylistItem.self)
+
+        let itemID = NSAttributeDescription()
+        itemID.name = "id"
+        itemID.attributeType = .UUIDAttributeType
+
+        let orderIndex = NSAttributeDescription()
+        orderIndex.name = "orderIndex"
+        orderIndex.attributeType = .integer32AttributeType
+
+        let addedAt = NSAttributeDescription()
+        addedAt.name = "addedAt"
+        addedAt.attributeType = .dateAttributeType
+
         // MARK: Relationships
         // music -> records
         let musicToRecords = NSRelationshipDescription()
@@ -140,11 +193,47 @@ final class CoreDataStack {
         musicToRecords.inverseRelationship = recordToMusic
         recordToMusic.inverseRelationship = musicToRecords
 
+        // playlist -> items (one-to-many)
+        let playlistToItems = NSRelationshipDescription()
+        playlistToItems.name = "items"
+        playlistToItems.destinationEntity = playlistItemEntity
+        playlistToItems.maxCount = 0
+        playlistToItems.deleteRule = .cascadeDeleteRule
+        playlistToItems.isOptional = true
+
+        // item -> playlist (to-one)
+        let itemToPlaylist = NSRelationshipDescription()
+        itemToPlaylist.name = "playlist"
+        itemToPlaylist.destinationEntity = playlistEntity
+        itemToPlaylist.maxCount = 1
+        itemToPlaylist.deleteRule = .nullifyDeleteRule
+
+        // item -> music (to-one)
+        let itemToMusic = NSRelationshipDescription()
+        itemToMusic.name = "music"
+        itemToMusic.destinationEntity = musicEntity
+        itemToMusic.maxCount = 1
+        itemToMusic.deleteRule = .nullifyDeleteRule
+
+        // music -> playlistItems (one-to-many)
+        let musicToPlaylistItems = NSRelationshipDescription()
+        musicToPlaylistItems.name = "playlistItems"
+        musicToPlaylistItems.destinationEntity = playlistItemEntity
+        musicToPlaylistItems.maxCount = 0
+        musicToPlaylistItems.deleteRule = .cascadeDeleteRule
+        musicToPlaylistItems.isOptional = true
+
+        // Inverse 설정
+        playlistToItems.inverseRelationship = itemToPlaylist
+        itemToPlaylist.inverseRelationship = playlistToItems
+        itemToMusic.inverseRelationship = musicToPlaylistItems
+        musicToPlaylistItems.inverseRelationship = itemToMusic
+
         // Entity에 속성 할당
         musicEntity.properties = [
             musicID, title, artist, albumTitle, genre,
             totalDurationMs, isrc, artworkUrl, cachedAt,
-            musicToRecords
+            musicToRecords, musicToPlaylistItems
         ]
         musicEntity.uniquenessConstraints = [[musicID]]
 
@@ -154,7 +243,18 @@ final class CoreDataStack {
             moodRawValue, recordToMusic
         ]
 
-        model.entities = [musicEntity, recordEntity]
+        playlistEntity.properties = [
+            playlistID, playlistName, playlistDescription,
+            coverImageUrl, playlistCreatedAt, playlistUpdatedAt,
+            playlistToItems
+        ]
+
+        playlistItemEntity.properties = [
+            itemID, orderIndex, addedAt,
+            itemToPlaylist, itemToMusic
+        ]
+
+        model.entities = [musicEntity, recordEntity, playlistEntity, playlistItemEntity]
         return model
     }()
 }

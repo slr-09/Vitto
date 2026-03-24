@@ -11,6 +11,7 @@ class MusicEntity: NSManagedObject {
     @NSManaged var artworkUrl: String?
     @NSManaged var cachedAt: Date?
     @NSManaged var records: NSSet?
+    @NSManaged var playlistItems: NSSet?
 }
 
 // MARK: - Convenience
