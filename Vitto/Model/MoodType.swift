@@ -1,6 +1,6 @@
 import UIKit
 
-enum MoodType {
+enum MoodType: String {
     case rainy
     case sunny
     case clear

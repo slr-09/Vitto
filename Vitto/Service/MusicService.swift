@@ -72,7 +72,8 @@ final class MusicService {
                         totalDurationMs: Int((song.duration ?? 0) * 1000),
                         isrc: song.isrc ?? "",
                         albumTitle: song.albumTitle ?? "",
-                        artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? ""
+                        artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
+                        genre: song.genreNames.first ?? "Unknown"
                     )
                     self.currentMusic.accept(playingMusic)
                     self.isPlaying.accept(true)
@@ -157,7 +158,8 @@ final class MusicService {
                             totalDurationMs: Int((song.duration ?? 0) * 1000),
                             isrc: song.isrc ?? "",
                             albumTitle: song.albumTitle ?? "",
-                            artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? ""
+                            artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
+                            genre: song.genreNames.first ?? "Unknown"
                         )
                     }
 
@@ -217,7 +219,8 @@ final class MusicService {
                             totalDurationMs: Int((song.duration ?? 0) * 1000),
                             isrc: song.isrc ?? "",
                             albumTitle: song.albumTitle ?? "",
-                            artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? ""
+                            artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
+                            genre: song.genreNames.first ?? "Unknown"
                         )
                     }
 
@@ -265,7 +268,8 @@ final class MusicService {
                             totalDurationMs: Int((song.duration ?? 0) * 1000),
                             isrc: song.isrc ?? "",
                             albumTitle: song.albumTitle ?? "",
-                            artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? ""
+                            artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
+                            genre: song.genreNames.first ?? "Unknown"
                         )
                     }
 
