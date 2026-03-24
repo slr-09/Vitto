@@ -36,14 +36,22 @@ final class MainTabBarController: UITabBarController {
             selectedImage: UIImage(systemName: "sparkle.magnifyingglass")
         )
         
+        let playlistVC = PlaylistViewController()
+        let playlistNav = UINavigationController(rootViewController: playlistVC)
+        playlistNav.tabBarItem = UITabBarItem(
+            title: "Playlist",
+            image: UIImage(systemName: "music.note.list"),
+            selectedImage: UIImage(systemName: "music.note.list")
+        )
+
         let statsVC = StatsViewController()
         statsVC.tabBarItem = UITabBarItem(
             title: "Stats",
             image: UIImage(systemName: "chart.bar"),
             selectedImage: UIImage(systemName: "chart.bar.fill")
         )
-        
-        viewControllers = [homeNav, searchNav, statsVC]
+
+        viewControllers = [homeNav, searchNav, playlistNav, statsVC]
     }
     
     private func setupMiniPlayer() {
