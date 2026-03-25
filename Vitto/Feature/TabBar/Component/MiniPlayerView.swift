@@ -10,6 +10,9 @@ import RxSwift
 import RxCocoa
 
 final class MiniPlayerView: UIView {
+
+    // MARK: - Events
+    let didTap = PublishRelay<Void>()
     
     // MARK: - UI Components
     
@@ -149,6 +152,14 @@ final class MiniPlayerView: UIView {
     private func setupStyles() {
         backgroundColor = .clear
         clipsToBounds = true
+        
+        let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap))
+        tap.cancelsTouchesInView = false
+        addGestureRecognizer(tap)
+    }
+    
+    @objc private func handleTap() {
+        didTap.accept(())
     }
     
     // MARK: - Configure

@@ -113,5 +113,17 @@ final class MainTabBarController: UITabBarController {
                 }
             })
             .disposed(by: disposeBag)
+        
+        // MiniPlayer 탭 → PlayerViewController present
+        miniPlayerView.didTap
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] in
+                guard let self else { return }
+                let playerVC = PlayerViewController()
+                playerVC.modalPresentationStyle = .overFullScreen
+                playerVC.modalTransitionStyle = .coverVertical
+                self.present(playerVC, animated: true)
+            })
+            .disposed(by: disposeBag)
     }
 }

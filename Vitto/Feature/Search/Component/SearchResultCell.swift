@@ -47,7 +47,7 @@ final class SearchResultCell: UITableViewCell {
 
     let moreButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setImage(UIImage(systemName: "ellipsis"), for: .normal)
+        button.setImage(AppIcon.ellipsis, for: .normal)
         button.tintColor = AppColor.onSurfaceVariant
         return button
     }()
@@ -89,7 +89,7 @@ final class SearchResultCell: UITableViewCell {
         moreButton.snp.makeConstraints {
             $0.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
             $0.centerY.equalTo(artworkImageView)
-            $0.size.equalTo(32)
+            $0.size.equalTo(24)
         }
 
         durationLabel.snp.makeConstraints {
