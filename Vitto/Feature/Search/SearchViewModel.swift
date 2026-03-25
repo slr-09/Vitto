@@ -20,17 +20,17 @@ final class SearchViewModel: ViewModelType {
     private let disposeBag = DisposeBag()
 
     func transform(input: Input) -> Output {
-        // 장르 조회: 전체 장르에서 랜덤 4개 선택
+        // 장르 조회: 캐시된 장르에서 랜덤 4개 선택
         let genres = input.viewDidLoad
             .flatMapLatest {
-                MusicService.shared.fetchGenres()
+                GenreCacheService.shared.cachedGenreNames()
                     .catch { error in
                         print("장르 조회 에러: \(error)")
                         return .just([])
                     }
             }
-            .map { allGenres in
-                Array(allGenres.shuffled().prefix(4)).map { $0.name }
+            .map { allGenreNames in
+                Array(allGenreNames.shuffled().prefix(4))
             }
             .asDriver(onErrorJustReturn: [])
 
