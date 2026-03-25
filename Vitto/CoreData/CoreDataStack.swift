@@ -229,10 +229,37 @@ final class CoreDataStack {
         itemToMusic.inverseRelationship = musicToPlaylistItems
         musicToPlaylistItems.inverseRelationship = itemToMusic
 
+        // MARK: GenreEntity (독립 엔티티 — 장르 카탈로그 캐싱용)
+        let genreEntity = NSEntityDescription()
+        genreEntity.name = "GenreEntity"
+        genreEntity.managedObjectClassName = NSStringFromClass(GenreEntity.self)
+
+        let genreID = NSAttributeDescription()
+        genreID.name = "genreID"
+        genreID.attributeType = .stringAttributeType
+        genreID.isOptional = true
+
+        let genreName = NSAttributeDescription()
+        genreName.name = "name"
+        genreName.attributeType = .stringAttributeType
+
+        let genreCachedAt = NSAttributeDescription()
+        genreCachedAt.name = "cachedAt"
+        genreCachedAt.attributeType = .dateAttributeType
+        genreCachedAt.isOptional = true
+
+        // MusicEntity에 genreNames Transformable 속성 추가
+        let genreNamesAttr = NSAttributeDescription()
+        genreNamesAttr.name = "genreNames"
+        genreNamesAttr.attributeType = .transformableAttributeType
+        genreNamesAttr.valueTransformerName = "NSSecureUnarchiveFromData"
+        genreNamesAttr.isOptional = true
+
         // Entity에 속성 할당
         musicEntity.properties = [
             musicID, title, artist, albumTitle, genre,
             totalDurationMs, isrc, artworkUrl, cachedAt,
+            genreNamesAttr,
             musicToRecords, musicToPlaylistItems
         ]
         musicEntity.uniquenessConstraints = [[musicID]]
@@ -254,7 +281,12 @@ final class CoreDataStack {
             itemToPlaylist, itemToMusic
         ]
 
-        model.entities = [musicEntity, recordEntity, playlistEntity, playlistItemEntity]
+        genreEntity.properties = [
+            genreID, genreName, genreCachedAt
+        ]
+        genreEntity.uniquenessConstraints = [[genreName]]
+
+        model.entities = [musicEntity, recordEntity, playlistEntity, playlistItemEntity, genreEntity]
         return model
     }()
 }
