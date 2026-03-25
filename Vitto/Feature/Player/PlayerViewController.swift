@@ -30,6 +30,7 @@ final class PlayerViewController: UIViewController {
         super.viewDidLoad()
         bind()
         setupSliderEvents()
+        setupPanToDismiss()
     }
 
     // MARK: - Binding
@@ -80,6 +81,45 @@ final class PlayerViewController: UIViewController {
 
         output.totalTimeText
             .drive(playerView.totalTimeLabel.rx.text)
+            .disposed(by: disposeBag)
+    }
+
+    // MARK: - Pan to Dismiss
+
+    private func setupPanToDismiss() {
+        let pan = UIPanGestureRecognizer()
+        view.addGestureRecognizer(pan)
+
+        pan.rx.event
+            .subscribe(with: self) { owner, gesture in
+                let translation = gesture.translation(in: owner.view)   // 터치해서 얼마나 이동했는지
+                let velocity = gesture.velocity(in: owner.view) // 손가락을 뗀 시점의 속도
+                
+                switch gesture.state {
+                case .changed:
+                    // 음수 차단 → 아래 방향으로만 드래그 허용
+                    let offsetY = max(translation.y, 0)
+                    // frame 대신 transform으로 시각적 위치만 이동 (원위치 복귀 시 .identity로 복원 가능)
+                    owner.view.transform = CGAffineTransform(translationX: 0, y: offsetY)
+                    // 화면 높이 대비 내린 비율(0.0~1.0)에 따라 opacity 감소 → dismiss 예고 효과
+                    let progress = min(offsetY / owner.view.bounds.height, 1.0)
+                    // 내릴수록 흐려지도록
+                    owner.view.layer.opacity = Float(1.0 - progress * 0.3)
+                    
+                case .ended, .cancelled:
+                    if translation.y > 150 || velocity.y > 1000 {
+                        owner.dismiss(animated: true)
+                    } else {
+                        UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseOut) {
+                            owner.view.transform = .identity
+                            owner.view.layer.opacity = 1
+                        }
+                    }
+                    
+                default:
+                    break
+                }
+            }
             .disposed(by: disposeBag)
     }
 
