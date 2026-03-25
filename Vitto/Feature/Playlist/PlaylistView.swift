@@ -97,8 +97,8 @@ final class PlaylistView: BaseView {
 // MARK: - UICollectionViewDelegateFlowLayout
 extension PlaylistView: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let spacing = AppSpacing.screenHorizontal * 2 + AppSpacing.md
+        let spacing = AppSpacing.screenHorizontal * 2 + AppSpacing.lg
         let width = (collectionView.bounds.width - spacing) / 2
-        return CGSize(width: width, height: width * 1.1)
+        return CGSize(width: width, height: width + 54) // 이미지(정사각형) + 하단 텍스트 영역
     }
 }

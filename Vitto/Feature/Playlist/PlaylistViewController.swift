@@ -49,7 +49,8 @@ final class PlaylistViewController: BaseViewController {
                 cellIdentifier: PlaylistCardCell.identifier,
                 cellType: PlaylistCardCell.self
             )) { _, playlist, cell in
-                cell.configure(name: playlist.name, songCount: playlist.songs.count)
+                let imageUrl = playlist.songs.first?.artworkUrl
+                cell.configure(name: playlist.name, songCount: playlist.songs.count, imageUrl: imageUrl)
             }
             .disposed(by: disposeBag)
 
