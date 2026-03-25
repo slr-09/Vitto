@@ -40,6 +40,20 @@ final class SearchViewController: BaseViewController {
 
         let output = viewModel.transform(input: input)
 
+        // Top Result 카드의 재생 버튼 → 첫 번째 결과 재생
+        searchView.topResultCard.playButton.rx.tap
+            .withLatestFrom(output.displayResults.asObservable())
+            .compactMap { $0.first }
+            .flatMapLatest { music in
+                MusicService.shared.play(musicID: music.musicID)
+                    .catch { error in
+                        print("재생 에러: \(error)")
+                        return .empty()
+                    }
+            }
+            .subscribe()
+            .disposed(by: disposeBag)
+
         // 장르 버튼 바인딩
         output.genres
             .drive(with: self) { owner, genres in

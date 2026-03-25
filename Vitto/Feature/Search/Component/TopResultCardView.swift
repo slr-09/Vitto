@@ -51,7 +51,7 @@ final class TopResultCardView: BaseView {
         return label
     }()
     
-    private let playButton: UIButton = {
+    let playButton: UIButton = {
         var config = UIButton.Configuration.filled()
         config.image = UIImage(systemName: "play.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 18, weight: .bold))
         config.baseForegroundColor = AppColor.onPrimary
