@@ -8,7 +8,7 @@ struct Music {
     let isrc: String          // 곡의 고유 식별자
     let albumTitle: String    // 앨범명
     let artworkUrl: String    // 앨범 이미지 URL
-    let genre: String         // 장르명
+    let genres: [String]      // 장르 목록
 }
 
 extension Music {

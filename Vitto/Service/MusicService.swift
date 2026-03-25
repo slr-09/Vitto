@@ -73,7 +73,7 @@ final class MusicService {
                         isrc: song.isrc ?? "",
                         albumTitle: song.albumTitle ?? "",
                         artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
-                        genre: song.genreNames.first ?? "Unknown"
+                        genres: song.genreNames
                     )
                     self.currentMusic.accept(playingMusic)
                     self.isPlaying.accept(true)
@@ -159,7 +159,7 @@ final class MusicService {
                             isrc: song.isrc ?? "",
                             albumTitle: song.albumTitle ?? "",
                             artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
-                            genre: song.genreNames.first ?? "Unknown"
+                            genres: song.genreNames
                         )
                     }
 
@@ -220,7 +220,7 @@ final class MusicService {
                             isrc: song.isrc ?? "",
                             albumTitle: song.albumTitle ?? "",
                             artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
-                            genre: song.genreNames.first ?? "Unknown"
+                            genres: song.genreNames
                         )
                     }
 
@@ -269,7 +269,7 @@ final class MusicService {
                             isrc: song.isrc ?? "",
                             albumTitle: song.albumTitle ?? "",
                             artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
-                            genre: song.genreNames.first ?? "Unknown"
+                            genres: song.genreNames
                         )
                     }
 

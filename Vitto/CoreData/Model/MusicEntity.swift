@@ -5,12 +5,11 @@ class MusicEntity: NSManagedObject {
     @NSManaged var title: String?
     @NSManaged var artist: String?
     @NSManaged var albumTitle: String?
-    @NSManaged var genre: String?
     @NSManaged var totalDurationMs: Int32
     @NSManaged var isrc: String?
     @NSManaged var artworkUrl: String?
     @NSManaged var cachedAt: Date?
-    @NSManaged var genreNames: [String]?
+    @NSManaged var genres: [String]?
     @NSManaged var records: NSSet?
     @NSManaged var playlistItems: NSSet?
 }
@@ -40,7 +39,7 @@ extension MusicEntity {
         entity.title = music.title
         entity.artist = music.artist
         entity.albumTitle = music.albumTitle
-        entity.genre = music.genre
+        entity.genres = music.genres
         entity.totalDurationMs = Int32(music.totalDurationMs)
         entity.isrc = music.isrc
         entity.artworkUrl = music.artworkUrl
@@ -58,7 +57,7 @@ extension MusicEntity {
             isrc: isrc ?? "",
             albumTitle: albumTitle ?? "",
             artworkUrl: artworkUrl ?? "",
-            genre: genre ?? "Unknown"
+            genres: genres ?? []
         )
     }
 }

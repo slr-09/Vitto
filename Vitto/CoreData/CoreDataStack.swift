@@ -72,10 +72,6 @@ final class CoreDataStack {
         albumTitle.name = "albumTitle"
         albumTitle.attributeType = .stringAttributeType
 
-        let genre = NSAttributeDescription()
-        genre.name = "genre"
-        genre.attributeType = .stringAttributeType
-
         let totalDurationMs = NSAttributeDescription()
         totalDurationMs.name = "totalDurationMs"
         totalDurationMs.attributeType = .integer32AttributeType
@@ -249,17 +245,17 @@ final class CoreDataStack {
         genreCachedAt.isOptional = true
 
         // MusicEntity에 genreNames Transformable 속성 추가
-        let genreNamesAttr = NSAttributeDescription()
-        genreNamesAttr.name = "genreNames"
-        genreNamesAttr.attributeType = .transformableAttributeType
-        genreNamesAttr.valueTransformerName = "NSSecureUnarchiveFromData"
-        genreNamesAttr.isOptional = true
+        let genres = NSAttributeDescription()
+        genres.name = "genres"
+        genres.attributeType = .transformableAttributeType
+        genres.valueTransformerName = "NSSecureUnarchiveFromData"
+        genres.isOptional = true
 
         // Entity에 속성 할당
         musicEntity.properties = [
-            musicID, title, artist, albumTitle, genre,
+            musicID, title, artist, albumTitle,
             totalDurationMs, isrc, artworkUrl, cachedAt,
-            genreNamesAttr,
+            genres,
             musicToRecords, musicToPlaylistItems
         ]
         musicEntity.uniquenessConstraints = [[musicID]]

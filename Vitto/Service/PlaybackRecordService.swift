@@ -119,9 +119,11 @@ final class PlaybackRecordService {
 
                 var genreStats: [String: (totalRate: Float, count: Int)] = [:]
                 for record in records {
-                    guard let genre = record.music?.genre, !genre.isEmpty else { continue }
-                    let existing = genreStats[genre] ?? (0, 0)
-                    genreStats[genre] = (existing.totalRate + record.completionRate, existing.count + 1)
+                    let genres = record.music?.genres ?? []
+                    for genre in genres where !genre.isEmpty {
+                        let existing = genreStats[genre] ?? (0, 0)
+                        genreStats[genre] = (existing.totalRate + record.completionRate, existing.count + 1)
+                    }
                 }
 
                 let sorted = genreStats
