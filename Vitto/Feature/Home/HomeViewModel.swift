@@ -12,16 +12,30 @@ final class HomeViewModel: ViewModelType {
 
     struct Output {
         let recommendedItems: Driver<[Music]>
+        let recommendedSectionTitle: Driver<String>
         let favoriteMixItems: Driver<[Music]>
         let heroMood: Driver<MoodType>
     }
 
     private let disposeBag = DisposeBag()
+    private let recommendationService = RecommendationService.shared
 
     func transform(input: Input) -> Output {
+        let period = TimePeriod.current
+
         let recommended = input.viewDidLoad
-            .map { Self.dummyRecommended() }
+            .flatMapLatest { [weak self] _ -> Observable<[Music]> in
+                guard let self else { return .just([]) }
+                return self.recommendationService
+                    .recommendationsForCurrentTimePeriod(limit: 10)
+                    .map { $0.isEmpty ? Self.dummyRecommended() : $0 }
+                    .catchAndReturn(Self.dummyRecommended())
+            }
             .asDriver(onErrorJustReturn: [])
+
+        let sectionTitle = input.viewDidLoad
+            .map { period.sectionTitle }
+            .asDriver(onErrorJustReturn: "Recommended for You")
 
         let favoriteMix = input.viewDidLoad
             .map { Self.dummyFavoriteMix() }
@@ -33,6 +47,7 @@ final class HomeViewModel: ViewModelType {
 
         return Output(
             recommendedItems: recommended,
+            recommendedSectionTitle: sectionTitle,
             favoriteMixItems: favoriteMix,
             heroMood: mood
         )
