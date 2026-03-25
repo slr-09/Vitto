@@ -67,6 +67,29 @@ class BaseView: UIView {
     func setupStyles() {}
 }
 
+// MARK: - BaseTableViewCell
+/// 재사용 가능한 UITableViewCell 기반 컴포넌트
+class BaseTableViewCell: UITableViewCell {
+
+    // MARK: - Init
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setupHierarchy()
+        setupConstraints()
+        setupStyles()
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    // MARK: - Setup Hooks
+    func setupHierarchy() {}
+    func setupConstraints() {}
+    func setupStyles() {}
+}
+
 // MARK: - GlassView
 /// Glassmorphism 스타일이 적용된 기본 뷰
 class GlassView: BaseView {

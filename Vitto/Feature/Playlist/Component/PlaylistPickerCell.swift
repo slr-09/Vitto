@@ -1,7 +1,7 @@
 import UIKit
 import SnapKit
 
-final class PlaylistPickerCell: UITableViewCell {
+final class PlaylistPickerCell: BaseTableViewCell {
 
     private let iconImageView: UIImageView = {
         let iv = UIImageView()
@@ -26,23 +26,12 @@ final class PlaylistPickerCell: UITableViewCell {
         return label
     }()
 
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-        setupHierarchy()
-        setupConstraints()
-        setupStyles()
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    private func setupHierarchy() {
+    // MARK: - Set Up
+    override func setupHierarchy() {
         [iconImageView, nameLabel, songCountLabel].forEach { contentView.addSubview($0) }
     }
 
-    private func setupConstraints() {
+    override func setupConstraints() {
         iconImageView.snp.makeConstraints {
             $0.leading.equalToSuperview().inset(AppSpacing.screenHorizontal)
             $0.centerY.equalToSuperview()
@@ -62,7 +51,7 @@ final class PlaylistPickerCell: UITableViewCell {
         }
     }
 
-    private func setupStyles() {
+    override func setupStyles() {
         backgroundColor = .clear
         selectionStyle = .none
     }

@@ -9,7 +9,7 @@ import UIKit
 import SnapKit
 import Kingfisher
 
-final class SearchResultCell: UITableViewCell {
+final class SearchResultCell: BaseTableViewCell {
 
     // MARK: - UI Components
     private let artworkImageView: UIImageView = {
@@ -54,21 +54,8 @@ final class SearchResultCell: UITableViewCell {
 
     var onMoreButtonTapped: (() -> Void)?
 
-    // MARK: - Init
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-        setupHierarchy()
-        setupConstraints()
-        setupStyles()
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
     // MARK: - Setup
-    private func setupHierarchy() {
+    override func setupHierarchy() {
         [artworkImageView, titleLabel, artistLabel, durationLabel, moreButton].forEach {
             contentView.addSubview($0)
         }
@@ -79,7 +66,7 @@ final class SearchResultCell: UITableViewCell {
         onMoreButtonTapped?()
     }
 
-    private func setupConstraints() {
+    override func setupConstraints() {
         artworkImageView.snp.makeConstraints {
             $0.leading.equalToSuperview().inset(AppSpacing.screenHorizontal)
             $0.verticalEdges.equalToSuperview().inset(AppSpacing.sm)
@@ -112,7 +99,7 @@ final class SearchResultCell: UITableViewCell {
         }
     }
 
-    private func setupStyles() {
+    override func setupStyles() {
         backgroundColor = .clear
         selectionStyle = .none
     }
