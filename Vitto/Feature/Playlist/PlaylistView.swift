@@ -17,7 +17,7 @@ final class PlaylistView: BaseView {
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         cv.backgroundColor = .clear
         cv.showsVerticalScrollIndicator = false
-        cv.register(PlaylistCardCell.self, forCellWithReuseIdentifier: PlaylistCardCell.reuseIdentifier)
+        cv.register(PlaylistCardCell.self, forCellWithReuseIdentifier: PlaylistCardCell.identifier)
         cv.delegate = self
         return cv
     }()

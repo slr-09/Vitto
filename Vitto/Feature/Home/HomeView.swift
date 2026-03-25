@@ -29,7 +29,7 @@ final class HomeView: BaseView {
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         cv.backgroundColor = .clear
         cv.showsHorizontalScrollIndicator = false
-        cv.register(MusicCardCell.self, forCellWithReuseIdentifier: MusicCardCell.reuseIdentifier)
+        cv.register(MusicCardCell.self, forCellWithReuseIdentifier: MusicCardCell.identifier)
         return cv
     }
 

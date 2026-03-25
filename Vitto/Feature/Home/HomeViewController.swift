@@ -49,7 +49,7 @@ final class HomeViewController: BaseViewController {
             
         output.recommendedItems
             .drive(homeView.recommendedCollectionView.rx.items(
-                cellIdentifier: MusicCardCell.reuseIdentifier,
+                cellIdentifier: MusicCardCell.identifier,
                 cellType: MusicCardCell.self
             )) { _, item, cell in
                 cell.configure(title: item.title, subtitle: item.artist)
@@ -58,7 +58,7 @@ final class HomeViewController: BaseViewController {
             
         output.favoriteMixItems
             .drive(homeView.favoriteMixCollectionView.rx.items(
-                cellIdentifier: MusicCardCell.reuseIdentifier,
+                cellIdentifier: MusicCardCell.identifier,
                 cellType: MusicCardCell.self
             )) { _, item, cell in
                 cell.configure(title: item.title, subtitle: item.albumTitle)

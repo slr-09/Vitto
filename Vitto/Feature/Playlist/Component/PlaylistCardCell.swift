@@ -3,8 +3,6 @@ import SnapKit
 
 final class PlaylistCardCell: UICollectionViewCell {
 
-    static let reuseIdentifier = "PlaylistCardCell"
-
     private let containerView: GlassView = {
         let view = GlassView()
         view.cornerRadius = AppSpacing.Radius.md

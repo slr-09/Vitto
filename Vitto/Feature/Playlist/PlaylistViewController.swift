@@ -46,7 +46,7 @@ final class PlaylistViewController: BaseViewController {
 
         output.playlists
             .drive(playlistView.collectionView.rx.items(
-                cellIdentifier: PlaylistCardCell.reuseIdentifier,
+                cellIdentifier: PlaylistCardCell.identifier,
                 cellType: PlaylistCardCell.self
             )) { _, playlist, cell in
                 cell.configure(name: playlist.name, songCount: playlist.songs.count)

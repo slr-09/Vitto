@@ -3,8 +3,6 @@ import SnapKit
 
 final class MusicCardCell: UICollectionViewCell {
 
-    static let reuseIdentifier = "MusicCardCell"
-
     private let albumArtImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFill
