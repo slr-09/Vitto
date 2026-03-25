@@ -6,6 +6,7 @@ final class PlaybackRecordService {
     static let shared = PlaybackRecordService()
 
     private let stack = CoreDataStack.shared
+    private let backgroundScheduler = ConcurrentDispatchQueueScheduler(qos: .userInitiated)
     private init() {}
 
     // MARK: - 기록 생성/종료
@@ -104,6 +105,48 @@ final class PlaybackRecordService {
         }
     }
 
+    // MARK: - 쿼리: 시간대 기반
+
+    /// 최근 N일간 특정 시간대에 스킵하지 않고 들은 곡을 재생 횟수 기준으로 반환
+    func songsForTimePeriod(
+        _ period: TimePeriod,
+        days: Int = 30,
+        limit: Int = 20
+    ) -> Observable<[(music: Music, playCount: Int)]> {
+        Observable.deferred { [weak self] () -> Observable<[(music: Music, playCount: Int)]> in
+            guard let self else { return .just([]) }
+            let ctx = self.stack.newBackgroundContext()
+
+            return Observable.create { observer in
+                ctx.perform {
+                    let request = NSFetchRequest<PlaybackRecord>(entityName: "PlaybackRecord")
+                    let cutoffDate = Calendar.current.date(byAdding: .day, value: -days, to: Date())!
+                    request.predicate = NSPredicate(
+                        format: "isSkipped == NO AND startedAt >= %@",
+                        cutoffDate as NSDate
+                    )
+                    request.relationshipKeyPathsForPrefetching = ["music"]
+
+                    do {
+                        let records = try ctx.fetch(request)
+                        let ranked = self.rankByPlayCount(
+                            records: records,
+                            period: period,
+                            limit: limit
+                        )
+                        observer.onNext(ranked)
+                        observer.onCompleted()
+                    } catch {
+                        observer.onError(error)
+                    }
+                }
+                return Disposables.create()
+            }
+        }
+        .subscribe(on: backgroundScheduler)
+        .observe(on: MainScheduler.instance)
+    }
+
     // MARK: - 쿼리: 장르별 선호도
 
     /// 완청률이 높은 상위 장르 목록
@@ -141,6 +184,33 @@ final class PlaybackRecordService {
     }
 
     // MARK: - Private Helpers
+
+    /// 시간대 필터링 → musicID별 그룹핑 → 재생 횟수 정렬 → 상위 limit개만 toMusic() 변환
+    private func rankByPlayCount(
+        records: [PlaybackRecord],
+        period: TimePeriod,
+        limit: Int
+    ) -> [(music: Music, playCount: Int)] {
+        let calendar = Calendar.current
+
+        // 시간대 필터 + musicID별 카운트 (MusicEntity 참조만 유지, 변환은 아직 안 함)
+        var countMap: [String: (entity: MusicEntity, count: Int)] = [:]
+        for record in records {
+            guard let date = record.startedAt,
+                  period.containsHour(calendar.component(.hour, from: date)),
+                  let entity = record.music,
+                  let id = entity.musicID else { continue }
+
+            let existing = countMap[id, default: (entity, 0)]
+            countMap[id] = (existing.entity, existing.count + 1)
+        }
+
+        // 정렬 후 상위 limit개에 대해서만 toMusic() 실행
+        return countMap.values
+            .sorted { $0.count > $1.count }
+            .prefix(limit)
+            .map { (music: $0.entity.toMusic(), playCount: $0.count) }
+    }
 
     /// PlaybackRecord 배열에서 중복 없는 Music 배열 추출
     private func uniqueSongs(from records: [PlaybackRecord]) -> [Music] {
