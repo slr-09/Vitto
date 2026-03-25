@@ -45,6 +45,15 @@ final class SearchResultCell: UITableViewCell {
         return label
     }()
 
+    let moreButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(systemName: "ellipsis"), for: .normal)
+        button.tintColor = AppColor.onSurfaceVariant
+        return button
+    }()
+
+    var onMoreButtonTapped: (() -> Void)?
+
     // MARK: - Init
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -60,9 +69,14 @@ final class SearchResultCell: UITableViewCell {
 
     // MARK: - Setup
     private func setupHierarchy() {
-        [artworkImageView, titleLabel, artistLabel, durationLabel].forEach {
+        [artworkImageView, titleLabel, artistLabel, durationLabel, moreButton].forEach {
             contentView.addSubview($0)
         }
+        moreButton.addTarget(self, action: #selector(moreButtonDidTap), for: .touchUpInside)
+    }
+
+    @objc private func moreButtonDidTap() {
+        onMoreButtonTapped?()
     }
 
     private func setupConstraints() {
@@ -70,6 +84,18 @@ final class SearchResultCell: UITableViewCell {
             $0.leading.equalToSuperview().inset(AppSpacing.screenHorizontal)
             $0.verticalEdges.equalToSuperview().inset(AppSpacing.sm)
             $0.size.equalTo(48)
+        }
+
+        moreButton.snp.makeConstraints {
+            $0.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
+            $0.centerY.equalTo(artworkImageView)
+            $0.size.equalTo(32)
+        }
+
+        durationLabel.snp.makeConstraints {
+            $0.trailing.equalTo(moreButton.snp.leading).offset(-AppSpacing.xs)
+            $0.centerY.equalTo(artworkImageView)
+            $0.width.equalTo(44)
         }
 
         titleLabel.snp.makeConstraints {
@@ -84,12 +110,6 @@ final class SearchResultCell: UITableViewCell {
             $0.trailing.equalTo(titleLabel)
             $0.bottom.equalTo(artworkImageView)
         }
-
-        durationLabel.snp.makeConstraints {
-            $0.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
-            $0.centerY.equalTo(artworkImageView)
-            $0.width.equalTo(44)
-        }
     }
 
     private func setupStyles() {
@@ -102,6 +122,7 @@ final class SearchResultCell: UITableViewCell {
         super.prepareForReuse()
         artworkImageView.kf.cancelDownloadTask()
         artworkImageView.image = nil
+        onMoreButtonTapped = nil
     }
 
     // MARK: - Configure

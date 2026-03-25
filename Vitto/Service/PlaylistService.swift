@@ -71,6 +71,23 @@ final class PlaylistService {
         }
     }
 
+    /// ID로 PlaylistEntity 조회 (동기)
+    func fetchPlaylistEntity(id: UUID) -> PlaylistEntity? {
+        let ctx = stack.context
+        let request = NSFetchRequest<PlaylistEntity>(entityName: "PlaylistEntity")
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        request.fetchLimit = 1
+        return try? ctx.fetch(request).first
+    }
+
+    /// 모든 PlaylistEntity 조회 (동기)
+    func fetchAllPlaylistEntities() -> [PlaylistEntity] {
+        let ctx = stack.context
+        let request = NSFetchRequest<PlaylistEntity>(entityName: "PlaylistEntity")
+        request.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
+        return (try? ctx.fetch(request)) ?? []
+    }
+
     // MARK: - Update
 
     /// 플레이리스트 이름 변경

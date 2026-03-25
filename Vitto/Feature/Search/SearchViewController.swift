@@ -93,8 +93,11 @@ final class SearchViewController: BaseViewController {
                     cellIdentifier: SearchResultCell.identifier,
                     cellType: SearchResultCell.self
                 )
-            ) { _, music, cell in
+            ) { [weak self] _, music, cell in
                 cell.configure(with: music)
+                cell.onMoreButtonTapped = {
+                    self?.showAddToPlaylistSheet(for: music)
+                }
             }
             .disposed(by: disposeBag)
 
@@ -126,5 +129,11 @@ final class SearchViewController: BaseViewController {
                 }
             }
             .disposed(by: disposeBag)
+    }
+
+    // MARK: - Playlist Picker
+    private func showAddToPlaylistSheet(for music: Music) {
+        let picker = PlaylistPickerViewController(music: music)
+        present(picker, animated: true)
     }
 }
