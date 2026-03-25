@@ -101,9 +101,7 @@ final class SearchViewModel: ViewModelType {
             }
             .disposed(by: disposeBag)
 
-        // 포커스 시 최신 목록 방출
-        let recentSearches = input.searchBarFocused
-            .map { [weak self] in self?.recentSearchesRelay.value ?? [] }
+        let recentSearches = recentSearchesRelay
             .asDriver(onErrorJustReturn: [])
 
         return Output(
