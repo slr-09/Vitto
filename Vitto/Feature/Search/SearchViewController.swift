@@ -17,6 +17,8 @@ final class SearchViewController: BaseViewController {
         navigationController?.setNavigationBarHidden(true, animated: false)
     }
 
+    private let recentSearchDeletedRelay = PublishRelay<String>()
+
     override func bind() {
         // MARK: - ViewModel 바인딩
         let searchButtonClicked = searchView.searchBar.rx.searchButtonClicked
@@ -31,11 +33,21 @@ final class SearchViewController: BaseViewController {
             }
         )
 
+        let searchBarFocused = searchView.searchBar.rx.textDidBeginEditing
+            .asObservable()
+
+        let recentSearchSelected = searchView.recentSearchTableView.rx
+            .modelSelected(String.self)
+            .asObservable()
+
         let input = SearchViewModel.Input(
             viewDidLoad: Observable.just(()),
             searchButtonClicked: searchButtonClicked,
             itemSelected: itemSelected,
-            genreSelected: genreSelected
+            genreSelected: genreSelected,
+            searchBarFocused: searchBarFocused,
+            recentSearchSelected: recentSearchSelected,
+            recentSearchDeleted: recentSearchDeletedRelay.asObservable()
         )
 
         let output = viewModel.transform(input: input)
@@ -77,6 +89,7 @@ final class SearchViewController: BaseViewController {
         output.displayResults
             .drive(with: self) { owner, songs in
                 if !songs.isEmpty {
+                    owner.searchView.recentSearchTableView.isHidden = true
                     UIView.animate(withDuration: 0.3) {
                         owner.searchView.searchResultTableView.isHidden = false
                         owner.searchView.searchResultTableView.alpha = 1.0
@@ -115,6 +128,29 @@ final class SearchViewController: BaseViewController {
             }
             .disposed(by: disposeBag)
 
+        // MARK: - 최근 검색어 바인딩
+        output.recentSearches
+            .drive(
+                searchView.recentSearchTableView.rx.items(
+                    cellIdentifier: RecentSearchCell.identifier,
+                    cellType: RecentSearchCell.self
+                )
+            ) { [weak self] _, query, cell in
+                cell.configure(query: query)
+                cell.onDeleteTapped = {
+                    self?.recentSearchDeletedRelay.accept(query)
+                }
+            }
+            .disposed(by: disposeBag)
+
+        // 최근 검색어 선택 시 → 검색바에 텍스트 반영 후 키보드 닫기
+        recentSearchSelected
+            .bind(with: self) { owner, query in
+                owner.searchView.searchBar.text = query
+                owner.searchView.searchBar.resignFirstResponder()
+            }
+            .disposed(by: disposeBag)
+
         // MARK: - View 이벤트 처리
         searchView.searchBar.rx.searchButtonClicked
             .subscribe(with: self) { owner, _ in
@@ -122,17 +158,42 @@ final class SearchViewController: BaseViewController {
             }
             .disposed(by: disposeBag)
 
+        // 검색바 포커스 + 텍스트 변화 감지 → 텍스트가 비면 최근 검색어 표시
+        let isSearchBarEmpty = searchView.searchBar.rx.text.orEmpty
+            .map { $0.trimmingCharacters(in: .whitespaces).isEmpty }
+            .distinctUntilChanged()
+
         searchView.searchBar.rx.textDidBeginEditing
-            .subscribe(with: self) { owner, _ in
+            .bind(with: self) { owner, _ in
                 owner.searchView.searchBar.setShowsCancelButton(true, animated: true)
+                let text = owner.searchView.searchBar.text ?? ""
+                if text.trimmingCharacters(in: .whitespaces).isEmpty {
+                    owner.searchView.recentSearchTableView.isHidden = false
+                    owner.searchView.searchResultTableView.isHidden = true
+                    owner.searchView.genreSectionView.isHidden = true
+                }
+            }
+            .disposed(by: disposeBag)
+
+        // 검색바에 포커스가 있는 상태에서 텍스트를 지우면 최근 검색어 표시
+        isSearchBarEmpty
+            .skip(1)
+            .filter { $0 }
+            .bind(with: self) { owner, _ in
+                guard owner.searchView.searchBar.isFirstResponder else { return }
+                owner.searchView.recentSearchTableView.isHidden = false
+                owner.searchView.searchResultTableView.isHidden = true
+                owner.searchView.genreSectionView.isHidden = true
             }
             .disposed(by: disposeBag)
 
         searchView.searchBar.rx.cancelButtonClicked
-            .subscribe(with: self) { owner, _ in
+            .bind(with: self) { owner, _ in
                 owner.searchView.searchBar.text = ""
                 owner.searchView.searchBar.setShowsCancelButton(false, animated: true)
                 owner.searchView.searchBar.resignFirstResponder()
+
+                owner.searchView.recentSearchTableView.isHidden = true
 
                 UIView.animate(withDuration: 0.3) {
                     owner.searchView.searchResultTableView.alpha = 0.0

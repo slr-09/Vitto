@@ -81,6 +81,17 @@ final class SearchView: BaseView {
 
     let genreChipViews: [GenreChipView] = (0..<4).map { _ in GenreChipView() }
 
+    // MARK: - Recent Search
+    let recentSearchTableView: UITableView = {
+        let tv = UITableView()
+        tv.backgroundColor = .clear
+        tv.separatorStyle = .none
+        tv.isHidden = true
+        tv.rowHeight = 48
+        tv.register(RecentSearchCell.self, forCellReuseIdentifier: RecentSearchCell.identifier)
+        return tv
+    }()
+
     // MARK: - Search Result
     let searchResultTableView: UITableView = {
         let tv = UITableView()
@@ -99,6 +110,7 @@ final class SearchView: BaseView {
         addSubview(titleLabel)
         addSubview(searchBar)
         addSubview(genreSectionView)
+        addSubview(recentSearchTableView)
         addSubview(searchResultTableView)
 
         genreSectionView.addSubview(genreSectionLabel)
@@ -144,6 +156,11 @@ final class SearchView: BaseView {
 
         genreChipViews.forEach {
             $0.snp.makeConstraints { $0.height.equalTo(56) }
+        }
+
+        recentSearchTableView.snp.makeConstraints {
+            $0.top.equalTo(searchBar.snp.bottom).offset(AppSpacing.md)
+            $0.leading.trailing.bottom.equalToSuperview()
         }
 
         searchResultTableView.snp.makeConstraints {
