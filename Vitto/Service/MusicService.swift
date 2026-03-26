@@ -20,8 +20,17 @@ enum MusicServiceError: Error {
 final class MusicService {
 
     static let shared = MusicService()
-    
-    private init() {}
+
+    private let disposeBag = DisposeBag()
+
+    private init() {
+        Observable.combineLatest(queue, currentIndex)
+            .subscribe(onNext: { [weak self] list, index in
+                self?.hasNext.accept(index < list.count - 1)
+                self?.hasPrevious.accept(index > 0)
+            })
+            .disposed(by: disposeBag)
+    }
 
     /// 현재 구독 상태를 앱 전역에서 참조할 수 있도록 저장
     private(set) var isSubscribed: Bool = false
@@ -32,10 +41,75 @@ final class MusicService {
     let currentMusic = BehaviorRelay<Music?>(value: nil)
     let isPlaying = BehaviorRelay<Bool>(value: false)
     let playbackTime = BehaviorRelay<TimeInterval>(value: 0)
-    
+
+    // MARK: - Queue State (재생 큐)
+    let queue = BehaviorRelay<[Music]>(value: [])
+    let currentIndex = BehaviorRelay<Int>(value: 0)
+    let hasNext = BehaviorRelay<Bool>(value: false)
+    let hasPrevious = BehaviorRelay<Bool>(value: false)
+
     private var progressTimer: Timer?
 
     // MARK: - 음악 재생
+
+    /// 여러 곡을 큐에 넣고 startIndex부터 재생합니다.
+    func playQueue(musics: [Music], startIndex: Int) -> Observable<Void> {
+        guard isSubscribed else {
+            return .error(MusicServiceError.notSubscribed)
+        }
+        guard !musics.isEmpty, startIndex >= 0, startIndex < musics.count else {
+            return .error(MusicServiceError.songNotFound)
+        }
+
+        return .async { [self] in
+            let ids = musics.map { MusicItemID($0.musicID) }
+            let request = MusicCatalogResourceRequest<Song>(
+                matching: \.id, memberOf: ids
+            )
+            let response = try await request.response()
+
+            // 응답 순서 보장 안되므로 Dictionary로 매핑
+            let songMap = Dictionary(
+                uniqueKeysWithValues: response.items.map { ($0.id.rawValue, $0) }
+            )
+
+            // fetch 성공한 곡만 필터링하여 Music-Song 쌍의 싱크 보장
+            var filteredMusics: [Music] = []
+            var orderedSongs: [Song] = []
+            for music in musics {
+                if let song = songMap[music.musicID] {
+                    filteredMusics.append(music)
+                    orderedSongs.append(song)
+                }
+            }
+
+            // startIndex 곡이 fetch에 실패했을 수 있으므로 재계산
+            guard let adjustedIndex = filteredMusics.firstIndex(where: {
+                $0.musicID == musics[startIndex].musicID
+            }) else {
+                throw MusicServiceError.songNotFound
+            }
+
+            player.queue = ApplicationMusicPlayer.Queue(
+                for: orderedSongs,
+                startingAt: orderedSongs[adjustedIndex]
+            )
+
+            do {
+                try await player.play()
+            } catch {
+                isPlaying.accept(false)
+                stopProgressTimer()
+                throw error
+            }
+
+            queue.accept(filteredMusics)
+            currentIndex.accept(adjustedIndex)
+            currentMusic.accept(filteredMusics[adjustedIndex])
+            isPlaying.accept(true)
+            startProgressTimer()
+        }
+    }
 
     /// musicID로 곡을 재생합니다.
     func play(musicID: String) -> Observable<Void> {
