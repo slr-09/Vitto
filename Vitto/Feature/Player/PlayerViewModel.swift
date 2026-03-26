@@ -48,14 +48,15 @@ final class PlayerViewModel {
             })
             .disposed(by: disposeBag)
 
-        // 이전 곡 (15초 뒤로 감기)
+        // 이전 곡 (5초 이내면 이전 곡, 아니면 처음으로)
         input.skipPrevTap
             .subscribe(onNext: {
                 let current = player.playbackTime
                 if current > 5 {
-                    player.playbackTime = max(0, current - 15)
+                    player.playbackTime = 0
+                    musicService.playbackTime.accept(0)
                 } else {
-                    Task { try? await player.skipToPreviousEntry() }
+                    Task { try? await musicService.skipToPreviousEntry() }
                 }
             })
             .disposed(by: disposeBag)

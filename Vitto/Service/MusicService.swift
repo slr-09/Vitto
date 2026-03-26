@@ -212,8 +212,28 @@ final class MusicService {
     
     /// 다음 곡
     func skipToNextEntry() async throws {
+        let currentQueue = queue.value
+        let nextIndex = currentIndex.value + 1
+        guard nextIndex < currentQueue.count else { return }
+
         try await player.skipToNextEntry()
-        print("[MusicService] 다음 곡 재생")
+        currentIndex.accept(nextIndex)
+        currentMusic.accept(currentQueue[nextIndex])
+        playbackTime.accept(0)
+        print("[MusicService] 다음 곡 재생: \(currentQueue[nextIndex].title)")
+    }
+
+    /// 이전 곡
+    func skipToPreviousEntry() async throws {
+        let currentQueue = queue.value
+        let prevIndex = currentIndex.value - 1
+        guard prevIndex >= 0 else { return }
+
+        try await player.skipToPreviousEntry()
+        currentIndex.accept(prevIndex)
+        currentMusic.accept(currentQueue[prevIndex])
+        playbackTime.accept(0)
+        print("[MusicService] 이전 곡 재생: \(currentQueue[prevIndex].title)")
     }
     
     // MARK: - Progress Timer
