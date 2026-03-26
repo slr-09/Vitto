@@ -17,18 +17,18 @@ final class PlaylistViewModel: ViewModelType {
     private let disposeBag = DisposeBag()
 
     func transform(input: Input) -> Output {
-        let reload = PublishRelay<Void>()
-
         // 플레이리스트 생성
         input.createPlaylistTapped
             .subscribe(onNext: { name in
                 PlaylistService.shared.createPlaylist(name: name)
-                reload.accept(())
             })
             .disposed(by: disposeBag)
 
-        // 플레이리스트 목록 조회
-        let playlists = Observable.merge(input.viewDidLoad, reload.asObservable())
+        // 플레이리스트 목록 조회 (외부 변경 시에도 자동 갱신)
+        let playlists = Observable.merge(
+                input.viewDidLoad,
+                PlaylistService.shared.playlistDidChange.asObservable()
+            )
             .flatMapLatest { _ in
                 PlaylistService.shared.fetchAllPlaylists()
             }

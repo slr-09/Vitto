@@ -26,8 +26,14 @@ final class PlaylistDetailViewModel: ViewModelType {
             .map { [playlist] in playlist.name }
             .asDriver(onErrorJustReturn: "")
 
-        let songs = input.viewDidLoad
-            .map { [playlist] in playlist.songs }
+        let songs = Observable.merge(
+                input.viewDidLoad,
+                PlaylistService.shared.playlistDidChange.asObservable()
+            )
+            .flatMapLatest { [playlist] _ in
+                PlaylistService.shared.fetchPlaylist(id: playlist.id)
+                    .map { $0?.songs ?? [] }
+            }
             .asDriver(onErrorJustReturn: [])
 
         input.itemSelected

@@ -1,11 +1,16 @@
 import CoreData
 import RxSwift
+import RxCocoa
 
 final class PlaylistService {
 
     static let shared = PlaylistService()
 
     private let stack = CoreDataStack.shared
+
+    /// 플레이리스트 데이터 변경 시 이벤트 발행
+    let playlistDidChange = PublishRelay<Void>()
+
     private init() {}
 
     // MARK: - Create
@@ -26,6 +31,7 @@ final class PlaylistService {
         playlist.updatedAt = Date()
 
         stack.saveContext()
+        playlistDidChange.accept(())
         return playlist
     }
 
@@ -95,6 +101,7 @@ final class PlaylistService {
         playlist.name = name
         playlist.updatedAt = Date()
         stack.saveContext()
+        playlistDidChange.accept(())
     }
 
     /// 플레이리스트 설명 변경
@@ -102,6 +109,7 @@ final class PlaylistService {
         playlist.playlistDescription = description
         playlist.updatedAt = Date()
         stack.saveContext()
+        playlistDidChange.accept(())
     }
 
     // MARK: - Delete
@@ -110,6 +118,7 @@ final class PlaylistService {
     func deletePlaylist(_ playlist: PlaylistEntity) {
         stack.context.delete(playlist)
         stack.saveContext()
+        playlistDidChange.accept(())
     }
 
     // MARK: - Song Management
@@ -134,6 +143,7 @@ final class PlaylistService {
 
         playlist.updatedAt = Date()
         stack.saveContext()
+        playlistDidChange.accept(())
     }
 
     /// 플레이리스트에서 곡 제거 후 orderIndex 재정렬
@@ -151,6 +161,7 @@ final class PlaylistService {
 
         playlist.updatedAt = Date()
         stack.saveContext()
+        playlistDidChange.accept(())
     }
 
     /// 곡 순서 변경
@@ -168,6 +179,7 @@ final class PlaylistService {
 
         playlist.updatedAt = Date()
         stack.saveContext()
+        playlistDidChange.accept(())
     }
 
 }
