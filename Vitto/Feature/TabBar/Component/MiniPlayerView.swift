@@ -158,7 +158,10 @@ final class MiniPlayerView: UIView {
         addGestureRecognizer(tap)
     }
     
-    @objc private func handleTap() {
+    @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
+        let location = gesture.location(in: self)
+        let isButtonArea = playPauseButton.frame.contains(location) || nextButton.frame.contains(location)
+        guard !isButtonArea else { return }
         didTap.accept(())
     }
     

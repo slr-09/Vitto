@@ -104,6 +104,13 @@ final class SearchResultCell: BaseTableViewCell {
         selectionStyle = .none
     }
 
+    override func setHighlighted(_ highlighted: Bool, animated: Bool) {
+        super.setHighlighted(highlighted, animated: animated)
+        UIView.animate(withDuration: highlighted ? 0.05 : 0.3) {
+            self.contentView.alpha = highlighted ? 0.5 : 1.0
+        }
+    }
+
     // MARK: - Prepare for Reuse
     override func prepareForReuse() {
         super.prepareForReuse()
