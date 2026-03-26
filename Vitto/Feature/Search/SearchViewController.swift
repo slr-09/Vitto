@@ -39,6 +39,7 @@ final class SearchViewController: BaseViewController {
         let recentSearchSelected = searchView.recentSearchTableView.rx
             .modelSelected(String.self)
             .asObservable()
+            .share()
 
         let input = SearchViewModel.Input(
             viewDidLoad: Observable.just(()),
