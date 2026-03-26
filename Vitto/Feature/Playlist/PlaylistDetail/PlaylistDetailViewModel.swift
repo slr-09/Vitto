@@ -31,8 +31,9 @@ final class PlaylistDetailViewModel: ViewModelType {
             .asDriver(onErrorJustReturn: [])
 
         input.itemSelected
-            .flatMapLatest { music in
-                MusicService.shared.play(musicID: music.musicID)
+            .flatMapLatest { [playlist] music in
+                let startIndex = playlist.songs.firstIndex(where: { $0.musicID == music.musicID }) ?? 0
+                return MusicService.shared.playQueue(musics: playlist.songs, startIndex: startIndex)
                     .catch { error in
                         print("재생 에러: \(error)")
                         return .empty()

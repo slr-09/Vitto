@@ -111,6 +111,31 @@ final class MusicService {
         }
     }
 
+    /// 현재 재생 큐 끝에 곡을 추가합니다.
+    func addToQueue(music: Music) -> Observable<Void> {
+        guard isSubscribed else {
+            return .error(MusicServiceError.notSubscribed)
+        }
+
+        return .async { [self] in
+            let request = MusicCatalogResourceRequest<Song>(
+                matching: \.id,
+                equalTo: MusicItemID(music.musicID)
+            )
+            let response = try await request.response()
+
+            guard let song = response.items.first else {
+                throw MusicServiceError.songNotFound
+            }
+
+            try await player.queue.insert(song, position: .tail)
+
+            var currentQueue = queue.value
+            currentQueue.append(music)
+            queue.accept(currentQueue)
+        }
+    }
+
     /// musicID로 곡을 재생합니다.
     func play(musicID: String) -> Observable<Void> {
         guard isSubscribed else {
