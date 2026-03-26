@@ -46,6 +46,18 @@ extension TimePeriod {
         "\(periodDescription) 플리"
     }
 
+    /// Apple Music 검색용 키워드 (사용자 데이터 없을 때 fallback)
+    var searchKeyword: String {
+        switch self {
+        case .wakeUp:      return "Morning Coffee"
+        case .concentrate: return "Pure Focus"
+        case .refresh:     return "Feel Good"
+        case .commute:     return "Driving"
+        case .relax:       return "Chill"
+        case .midnight:    return "Sleep"
+        }
+    }
+
     /// 홈 섹션 헤더 타이틀
     var sectionTitle: String {
         switch self {

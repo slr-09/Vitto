@@ -52,16 +52,16 @@ final class HomeViewController: BaseViewController {
                 cellIdentifier: MusicCardCell.identifier,
                 cellType: MusicCardCell.self
             )) { _, item, cell in
-                cell.configure(title: item.title, subtitle: item.artist)
+                cell.configure(title: item.title, subtitle: item.artist, imageName: item.artworkUrl)
             }
             .disposed(by: disposeBag)
-            
+
         output.favoriteMixItems
             .drive(homeView.favoriteMixCollectionView.rx.items(
                 cellIdentifier: MusicCardCell.identifier,
                 cellType: MusicCardCell.self
             )) { _, item, cell in
-                cell.configure(title: item.title, subtitle: item.albumTitle)
+                cell.configure(title: item.title, subtitle: item.albumTitle, imageName: item.artworkUrl)
             }
             .disposed(by: disposeBag)
             

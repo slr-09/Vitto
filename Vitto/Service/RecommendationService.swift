@@ -5,12 +5,24 @@ final class RecommendationService {
     static let shared = RecommendationService()
 
     private let recordService = PlaybackRecordService.shared
+    private let musicService = MusicService.shared
     private init() {}
 
-    /// 현재 시간대 기반 추천 곡 목록 (읽기 전용)
+    /// 현재 시간대 기반 추천 곡 목록
+    /// 사용자 데이터가 있으면 청취 기록 기반, 없으면 Apple Music 키워드 검색으로 fallback
     func recommendationsForCurrentTimePeriod(limit: Int = 20) -> Observable<[Music]> {
-        recordService
-            .songsForTimePeriod(.current, days: 30, limit: limit)
+        let period = TimePeriod.current
+
+        return recordService
+            .songsForTimePeriod(period, days: 30, limit: limit)
             .map { $0.map(\.music) }
+            .flatMap { [weak self] songs -> Observable<[Music]> in
+                guard let self else { return .just([]) }
+                
+                if !songs.isEmpty { return .just(songs) }
+                
+                return self.musicService
+                    .searchCuratedPlaylistTracks(query: period.searchKeyword, limit: limit)
+            }
     }
 }

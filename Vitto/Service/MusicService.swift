@@ -254,6 +254,35 @@ final class MusicService {
         }
     }
 
+    /// 키워드로 Apple Music 큐레이션 플레이리스트를 검색하고, 첫 번째 플레이리스트의 트랙을 반환
+    func searchCuratedPlaylistTracks(query: String, limit: Int = 20) -> Observable<[Music]> {
+        return .async {
+            var request = MusicCatalogSearchRequest(term: query, types: [MusicKit.Playlist.self])
+            request.limit = 1
+            let response = try await request.response()
+
+            guard let playlist = response.playlists.first else { return [] }
+
+            let detailedPlaylist = try await playlist.with([.tracks])
+
+            guard let tracks = detailedPlaylist.tracks else { return [] }
+
+            return tracks.prefix(limit).compactMap { track -> Music? in
+                guard case let .song(song) = track else { return nil }
+                return Music(
+                    musicID: song.id.rawValue,
+                    title: song.title,
+                    artist: song.artistName,
+                    totalDurationMs: Int((song.duration ?? 0) * 1000),
+                    isrc: song.isrc ?? "",
+                    albumTitle: song.albumTitle ?? "",
+                    artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
+                    genres: song.genreNames
+                )
+            }
+        }
+    }
+
     // MARK: - 장르 조회
 
     /// Apple Music 카탈로그에서 전체 장르 목록을 가져옵니다.

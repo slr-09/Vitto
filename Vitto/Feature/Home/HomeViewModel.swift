@@ -28,8 +28,7 @@ final class HomeViewModel: ViewModelType {
                 guard let self else { return .just([]) }
                 return self.recommendationService
                     .recommendationsForCurrentTimePeriod(limit: 10)
-                    .map { $0.isEmpty ? Self.dummyRecommended() : $0 }
-                    .catchAndReturn(Self.dummyRecommended())
+                    .catchAndReturn([])
             }
             .asDriver(onErrorJustReturn: [])
 

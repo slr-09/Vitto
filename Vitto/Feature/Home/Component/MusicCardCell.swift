@@ -1,5 +1,6 @@
 import UIKit
 import SnapKit
+import Kingfisher
 
 final class MusicCardCell: UICollectionViewCell {
 
@@ -73,7 +74,11 @@ final class MusicCardCell: UICollectionViewCell {
     func configure(title: String, subtitle: String, imageName: String? = nil) {
         titleLabel.text = title
         subtitleLabel.text = subtitle
-        // if let imageName { albumArtImageView.image = UIImage(named: imageName) }
+        if let urlString = imageName, let url = URL(string: urlString) {
+            albumArtImageView.kf.setImage(with: url, options: [.transition(.fade(0.3))])
+        } else {
+            albumArtImageView.image = nil
+        }
     }
 
     func setActive(_ active: Bool) {
