@@ -48,6 +48,12 @@ final class HomeViewController: BaseViewController {
                 self?.homeView.heroSectionView.configure(mood: mood)
             })
             .disposed(by: disposeBag)
+            
+        output.heroMoodSongs
+            .drive(onNext: { [weak self] songs in
+                self?.homeView.heroSectionView.updateTrackInfo(count: songs.count)
+            })
+            .disposed(by: disposeBag)
 
         homeView.heroSectionView.tapEvent
             .withLatestFrom(output.heroMood)

@@ -15,6 +15,7 @@ final class HomeViewModel: ViewModelType {
         let recommendedSectionTitle: Driver<String>
         let favoriteMixItems: Driver<[Music]>
         let heroMood: Driver<WeatherCategory>
+        let heroMoodSongs: Driver<[Music]>
     }
 
     private let disposeBag = DisposeBag()
@@ -27,6 +28,15 @@ final class HomeViewModel: ViewModelType {
         let mood = input.viewDidLoad
             .flatMapLatest { _ in tracker.currentMood }
             .asDriver(onErrorJustReturn: .sunny)
+            
+        let heroSongs = mood.asObservable()
+            .flatMapLatest { [weak self] currentMood -> Observable<[Music]> in
+                guard let self else { return .just([]) }
+                return self.recommendationService
+                    .recommendationsForWeather(currentMood, limit: 30)
+                    .catchAndReturn([])
+            }
+            .asDriver(onErrorJustReturn: [])
 
         let recommended = input.viewDidLoad
             .flatMapLatest { [weak self] _ -> Observable<[Music]> in
@@ -49,7 +59,8 @@ final class HomeViewModel: ViewModelType {
             recommendedItems: recommended,
             recommendedSectionTitle: sectionTitle,
             favoriteMixItems: favoriteMix,
-            heroMood: mood
+            heroMood: mood,
+            heroMoodSongs: heroSongs
         )
     }
 }

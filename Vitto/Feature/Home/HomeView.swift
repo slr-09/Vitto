@@ -3,7 +3,6 @@ import SnapKit
 
 final class HomeView: BaseView {
 
-    private weak var nebulaLayer: CAGradientLayer?
     let scrollView = UIScrollView()
     private let contentStack: UIStackView = {
         let sv = UIStackView()
@@ -53,9 +52,6 @@ final class HomeView: BaseView {
             $0.edges.equalToSuperview()
             $0.width.equalTo(scrollView)
         }
-        heroSectionView.snp.makeConstraints {
-            $0.height.equalTo(200)
-        }
         recommendedCollectionView.snp.makeConstraints {
             $0.height.equalTo(185)
         }
@@ -70,14 +66,6 @@ final class HomeView: BaseView {
         scrollView.contentInsetAdjustmentBehavior = .never
         scrollView.showsVerticalScrollIndicator = false
         
-        let gradient = AppGradients.backgroundNebula(frame: bounds)
-        layer.insertSublayer(gradient, at: 0)
-        self.nebulaLayer = gradient
-    }
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        nebulaLayer?.frame = bounds
     }
 
     override func safeAreaInsetsDidChange() {

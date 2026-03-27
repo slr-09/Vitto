@@ -34,9 +34,9 @@ extension WeatherCategory {
 
     var gradientColors: [UIColor] {
         switch self {
-        case .sunny:   return [UIColor(hex: "#F9A825"), UIColor(hex: "#FF7043")]
+        case .sunny:   return [UIColor(hex: "#F9A825").withAlphaComponent(0.1), UIColor(hex: "#FF7043").withAlphaComponent(0.0)]
         case .cloudy:  return [AppColor.primary, AppColor.secondary]
-        case .rainy:   return [AppColor.tertiary, AppColor.secondary.withAlphaComponent(0.6)]
+        case .rainy:   return [AppColor.tertiary.withAlphaComponent(0.1), AppColor.secondary.withAlphaComponent(0.0)]
         case .snowy:   return [AppColor.backgroundDeepSpace, AppColor.tertiary.withAlphaComponent(0.5)]
         case .foggy:   return [UIColor(hex: "#48474F"), AppColor.tertiary.withAlphaComponent(0.3)]
         case .stormy:  return [UIColor(hex: "#1A0A2E"), AppColor.primaryRose.withAlphaComponent(0.6)]
