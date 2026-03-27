@@ -1,7 +1,8 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13122.16" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13104.12"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -11,15 +12,51 @@
             <objects>
                 <viewController id="01J-lp-oVM" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Ze5-6b-2t3">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" xcode11CocoaTouchSystemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="UCB-fs-ZV9">
+                                <rect key="frame" x="81.666666666666686" y="321" width="230" height="210"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Vitto" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1eE-eW-0Kl">
+                                        <rect key="frame" x="59.333333333333336" y="0.0" width="111.33333333333331" height="60"/>
+                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="50"/>
+                                        <color key="textColor" red="0.96470588235294119" green="0.94901960784313721" blue="0.9882352941176471" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="neon_wave_icon" translatesAutoresizingMaskIntoConstraints="NO" id="vPG-ZD-FMd">
+                                        <rect key="frame" x="0.0" y="80" width="230" height="130"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="230" id="Yzk-vu-dIz"/>
+                                            <constraint firstAttribute="height" constant="130" id="btC-2B-23e"/>
+                                        </constraints>
+                                    </imageView>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstItem="vPG-ZD-FMd" firstAttribute="leading" secondItem="UCB-fs-ZV9" secondAttribute="leading" id="4Ue-65-fuW"/>
+                                    <constraint firstItem="1eE-eW-0Kl" firstAttribute="centerX" secondItem="UCB-fs-ZV9" secondAttribute="centerX" id="Nr1-Qi-cdI"/>
+                                    <constraint firstItem="1eE-eW-0Kl" firstAttribute="top" secondItem="UCB-fs-ZV9" secondAttribute="top" id="Xps-T1-ZYc"/>
+                                    <constraint firstItem="vPG-ZD-FMd" firstAttribute="centerX" secondItem="1eE-eW-0Kl" secondAttribute="centerX" id="ZZv-Eb-P4K"/>
+                                    <constraint firstItem="vPG-ZD-FMd" firstAttribute="top" secondItem="1eE-eW-0Kl" secondAttribute="bottom" constant="20" id="qwx-AQ-6gu"/>
+                                    <constraint firstAttribute="bottom" secondItem="vPG-ZD-FMd" secondAttribute="bottom" id="w13-nV-d78"/>
+                                    <constraint firstAttribute="trailing" secondItem="vPG-ZD-FMd" secondAttribute="trailing" id="zPw-i7-XbX"/>
+                                </constraints>
+                            </view>
+                        </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                        <color key="backgroundColor" red="0.054901960784313725" green="0.054901960784313725" blue="0.078431372549019607" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="UCB-fs-ZV9" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="dNh-mz-smh"/>
+                            <constraint firstItem="UCB-fs-ZV9" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="lvf-iv-U8m"/>
+                        </constraints>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="53" y="375"/>
+            <point key="canvasLocation" x="52.671755725190835" y="374.64788732394368"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="neon_wave_icon" width="326" height="178"/>
+    </resources>
 </document>
