@@ -159,6 +159,10 @@ final class HeroSectionView: BaseView {
             .map { _ in }
             .bind(to: tapEvent)
             .disposed(by: disposeBag)
+
+        playButton.rx.tap
+            .bind(to: tapEvent)
+            .disposed(by: disposeBag)
     }
 
     override func layoutSubviews() {
