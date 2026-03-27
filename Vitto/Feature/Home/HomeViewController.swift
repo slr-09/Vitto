@@ -37,8 +37,7 @@ final class HomeViewController: BaseViewController {
         
         let input = HomeViewModel.Input(
             viewDidLoad: viewDidLoadTrigger,
-            playButtonTapped: Observable.empty(),
-            itemSelected: Observable.empty()
+            playButtonTapped: Observable.empty()
         )
         
         let output = viewModel.transform(input: input)
@@ -80,6 +79,17 @@ final class HomeViewController: BaseViewController {
                 cell.configure(title: item.title, subtitle: item.albumTitle, imageName: item.artworkUrl)
             }
             .disposed(by: disposeBag)
-            
+
+        homeView.recommendedCollectionView.rx.itemSelected
+            .withLatestFrom(output.recommendedItems) { indexPath, items in
+                (items, indexPath.item)
+            }
+            .subscribe(with: self) { owner, pair in
+                let (items, index) = pair
+                MusicService.shared.playQueue(musics: items, startIndex: index)
+                    .subscribe()
+                    .disposed(by: owner.disposeBag)
+            }
+            .disposed(by: disposeBag)
     }
 }

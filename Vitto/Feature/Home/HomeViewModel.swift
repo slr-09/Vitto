@@ -7,7 +7,6 @@ final class HomeViewModel: ViewModelType {
     struct Input {
         let viewDidLoad: Observable<Void>
         let playButtonTapped: Observable<Void>
-        let itemSelected: Observable<IndexPath>
     }
 
     struct Output {

@@ -12,7 +12,7 @@ final class SectionHeaderView: UIView {
 
     let moreButton: UIButton = {
         var config = UIButton.Configuration.plain()
-        config.title = "See All"
+//        config.title = "See All"
         config.baseForegroundColor = AppColor.secondary
         config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
             var a = attrs

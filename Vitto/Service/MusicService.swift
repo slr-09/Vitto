@@ -178,6 +178,36 @@ final class MusicService {
         }
     }
 
+    /// 현재 재생 큐의 맨 앞(현재 곡 다음)에 곡을 삽입합니다.
+    func insertNext(music: Music) -> Observable<Void> {
+        if isPreviewMode {
+            var currentQueue = queue.value
+            let insertIndex = currentIndex.value + 1
+            currentQueue.insert(music, at: min(insertIndex, currentQueue.count))
+            queue.accept(currentQueue)
+            return .just(())
+        }
+
+        return .async { [self] in
+            let request = MusicCatalogResourceRequest<Song>(
+                matching: \.id,
+                equalTo: MusicItemID(music.musicID)
+            )
+            let response = try await request.response()
+
+            guard let song = response.items.first else {
+                throw MusicServiceError.songNotFound
+            }
+
+            try await player.queue.insert(song, position: .afterCurrentEntry)
+
+            var currentQueue = queue.value
+            let insertIndex = currentIndex.value + 1
+            currentQueue.insert(music, at: min(insertIndex, currentQueue.count))
+            queue.accept(currentQueue)
+        }
+    }
+
     /// 현재 재생 큐 끝에 곡을 추가합니다.
     func addToQueue(music: Music) -> Observable<Void> {
         if isPreviewMode {
