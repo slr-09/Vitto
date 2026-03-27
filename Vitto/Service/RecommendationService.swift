@@ -35,7 +35,7 @@ final class RecommendationService {
             .flatMap { [weak self] songs -> Observable<[Music]> in
                 guard let self else { return .just([]) }
 
-                if !songs.isEmpty { return .just(songs) }
+                if songs.count >= 7 { return .just(songs) }
 
                 return self.musicService
                     .searchCuratedPlaylistTracks(query: weather.searchKeyword, limit: limit)
