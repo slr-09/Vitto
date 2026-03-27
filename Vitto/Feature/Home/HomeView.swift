@@ -47,7 +47,7 @@ final class HomeView: BaseView {
         scrollView.snp.makeConstraints {
             $0.top.equalTo(safeAreaLayoutGuide)
             $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(safeAreaLayoutGuide)
+            $0.bottom.equalToSuperview().inset(AppSpacing.md)
         }
         contentStack.snp.makeConstraints {
             $0.edges.equalToSuperview()
@@ -78,6 +78,12 @@ final class HomeView: BaseView {
     override func layoutSubviews() {
         super.layoutSubviews()
         nebulaLayer?.frame = bounds
+    }
+
+    override func safeAreaInsetsDidChange() {
+        super.safeAreaInsetsDidChange()
+        scrollView.contentInset.bottom = safeAreaInsets.bottom
+        scrollView.verticalScrollIndicatorInsets.bottom = safeAreaInsets.bottom
     }
 
     private func makeSectionContainer(header: SectionHeaderView, collection: UICollectionView) -> UIView {

@@ -54,6 +54,15 @@ final class MainTabBarController: UITabBarController {
         viewControllers = [homeNav, searchNav, playlistNav, statsVC]
     }
     
+    private func updateChildSafeAreaForMiniPlayer(isVisible: Bool) {
+        // artwork(44) + padding top/bottom(md * 2) + tabBar 위 gap(sm)
+        let miniPlayerHeight: CGFloat = 44 + AppSpacing.md * 2 + AppSpacing.sm
+        let bottomInset: CGFloat = isVisible ? miniPlayerHeight : 0
+        viewControllers?.forEach { vc in
+            vc.additionalSafeAreaInsets.bottom = bottomInset
+        }
+    }
+
     private func setupMiniPlayer() {
         view.addSubview(miniPlayerView)
         
@@ -71,6 +80,7 @@ final class MainTabBarController: UITabBarController {
         .observe(on: MainScheduler.instance)
         .subscribe(onNext: { [weak self] music, isPlaying in
             self?.miniPlayerView.configure(with: music, isPlaying: isPlaying)
+            self?.updateChildSafeAreaForMiniPlayer(isVisible: music != nil)
         })
         .disposed(by: disposeBag)
         

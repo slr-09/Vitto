@@ -88,6 +88,7 @@ final class SearchView: BaseView {
         tv.separatorStyle = .none
         tv.isHidden = true
         tv.rowHeight = 48
+        tv.keyboardDismissMode = .onDrag
         tv.register(RecentSearchCell.self, forCellReuseIdentifier: RecentSearchCell.identifier)
         return tv
     }()
@@ -98,6 +99,7 @@ final class SearchView: BaseView {
         tv.backgroundColor = .clear
         tv.separatorStyle = .none
         tv.isHidden = true // 처음에는 숨김 처리
+        tv.keyboardDismissMode = .onDrag
         tv.register(SearchResultCell.self, forCellReuseIdentifier: SearchResultCell.identifier)
         return tv
     }()
@@ -165,7 +167,8 @@ final class SearchView: BaseView {
 
         searchResultTableView.snp.makeConstraints {
             $0.top.equalTo(searchBar.snp.bottom).offset(AppSpacing.md)
-            $0.leading.trailing.bottom.equalToSuperview()
+            $0.leading.trailing.equalToSuperview()
+            $0.bottom.equalToSuperview().inset(AppSpacing.md)
         }
         
         topResultCard.snp.makeConstraints {

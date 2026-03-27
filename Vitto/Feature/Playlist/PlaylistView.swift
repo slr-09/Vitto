@@ -11,7 +11,7 @@ final class PlaylistView: BaseView {
         layout.sectionInset = UIEdgeInsets(
             top: AppSpacing.md,
             left: AppSpacing.screenHorizontal,
-            bottom: AppSpacing.xxl,
+            bottom: AppSpacing.md,
             right: AppSpacing.screenHorizontal
         )
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
