@@ -14,6 +14,9 @@ final class HomeView: BaseView {
 
     let heroSectionView = HeroSectionView()
 
+    let weatherHeader = SectionHeaderView()
+    lazy var weatherCollectionView = makeHorizontalCollectionView(itemSize: CGSize(width: 140, height: 185))
+
     private let recommendedHeader = SectionHeaderView()
     lazy var recommendedCollectionView = makeHorizontalCollectionView(itemSize: CGSize(width: 140, height: 185))
 
@@ -37,10 +40,11 @@ final class HomeView: BaseView {
         [scrollView].forEach { addSubview($0) }
         scrollView.addSubview(contentStack)
 
+        let weatherSection = makeSectionContainer(header: weatherHeader, collection: weatherCollectionView)
         let recommendedSection = makeSectionContainer(header: recommendedHeader, collection: recommendedCollectionView)
         let favoriteMixSection = makeSectionContainer(header: favoriteMixHeader, collection: favoriteMixCollectionView)
 
-        [heroSectionView, recommendedSection, favoriteMixSection].forEach { contentStack.addArrangedSubview($0) }
+        [heroSectionView, weatherSection, recommendedSection, favoriteMixSection].forEach { contentStack.addArrangedSubview($0) }
     }
 
     override func setupConstraints() {
@@ -55,6 +59,9 @@ final class HomeView: BaseView {
         }
         heroSectionView.snp.makeConstraints {
             $0.height.equalTo(200)
+        }
+        weatherCollectionView.snp.makeConstraints {
+            $0.height.equalTo(185)
         }
         recommendedCollectionView.snp.makeConstraints {
             $0.height.equalTo(185)

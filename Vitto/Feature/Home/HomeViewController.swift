@@ -48,7 +48,22 @@ final class HomeViewController: BaseViewController {
                 self?.homeView.heroSectionView.configure(mood: mood)
             })
             .disposed(by: disposeBag)
-            
+
+        output.weatherSectionTitle
+            .drive(onNext: { [weak self] title in
+                self?.homeView.weatherHeader.configure(title: title)
+            })
+            .disposed(by: disposeBag)
+
+        output.weatherItems
+            .drive(homeView.weatherCollectionView.rx.items(
+                cellIdentifier: MusicCardCell.identifier,
+                cellType: MusicCardCell.self
+            )) { _, item, cell in
+                cell.configure(title: item.title, subtitle: item.artist, imageName: item.artworkUrl)
+            }
+            .disposed(by: disposeBag)
+
         output.recommendedItems
             .drive(homeView.recommendedCollectionView.rx.items(
                 cellIdentifier: MusicCardCell.identifier,

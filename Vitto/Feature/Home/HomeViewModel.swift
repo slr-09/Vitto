@@ -11,6 +11,8 @@ final class HomeViewModel: ViewModelType {
     }
 
     struct Output {
+        let weatherItems: Driver<[Music]>
+        let weatherSectionTitle: Driver<String>
         let recommendedItems: Driver<[Music]>
         let recommendedSectionTitle: Driver<String>
         let favoriteMixItems: Driver<[Music]>
@@ -22,6 +24,23 @@ final class HomeViewModel: ViewModelType {
 
     func transform(input: Input) -> Output {
         let period = TimePeriod.current
+        let tracker = PlaybackTracker.shared
+
+        let mood = input.viewDidLoad
+            .flatMapLatest { _ in tracker.currentMood }
+            .asDriver(onErrorJustReturn: .sunny)
+
+        let weatherItems = tracker.currentMood
+            .flatMapLatest { [weak self] weather -> Observable<[Music]> in
+                guard let self else { return .just([]) }
+                return self.recommendationService
+                    .recommendationsForWeather(weather, limit: 10)
+                    .catchAndReturn([])
+            }
+            .asDriver(onErrorJustReturn: [])
+
+        let weatherSectionTitle = mood
+            .map { $0.title }
 
         let recommended = input.viewDidLoad
             .flatMapLatest { [weak self] _ -> Observable<[Music]> in
@@ -40,11 +59,9 @@ final class HomeViewModel: ViewModelType {
             .map { Self.dummyFavoriteMix() }
             .asDriver(onErrorJustReturn: [])
 
-        let mood = input.viewDidLoad
-            .flatMapLatest { _ in PlaybackTracker.shared.currentMood }
-            .asDriver(onErrorJustReturn: .sunny)
-
         return Output(
+            weatherItems: weatherItems,
+            weatherSectionTitle: weatherSectionTitle,
             recommendedItems: recommended,
             recommendedSectionTitle: sectionTitle,
             favoriteMixItems: favoriteMix,
