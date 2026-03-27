@@ -25,7 +25,7 @@ extension TimePeriod {
 
     /// 현재 시각 기준 시간대
     static var current: TimePeriod {
-        let hour = Calendar.current.component(.hour, from: Date())
+        let hour = DateManager.shared.currentHour()
         return allCases.first { $0.containsHour(hour) } ?? .midnight
     }
 

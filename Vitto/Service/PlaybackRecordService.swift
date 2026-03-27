@@ -7,7 +7,6 @@ final class PlaybackRecordService {
 
     private let stack = CoreDataStack.shared
     private let weatherService = WeatherService.shared
-    private let backgroundScheduler = ConcurrentDispatchQueueScheduler(qos: .userInitiated)
     private let disposeBag = DisposeBag()
     private init() {}
 
@@ -62,64 +61,73 @@ final class PlaybackRecordService {
 
     /// 특정 무드에서 스킵하지 않고 들은 곡 조회
     func songs(forMood mood: WeatherCategory) -> Observable<[Music]> {
-        Observable.create { [weak self] observer in
-            guard let self else { return Disposables.create() }
-            let ctx = self.stack.context
-            let request = NSFetchRequest<PlaybackRecord>(entityName: "PlaybackRecord")
-            request.predicate = NSPredicate(
-                format: "moodRawValue == %@ AND isSkipped == NO",
-                mood.rawValue
-            )
-            request.sortDescriptors = [NSSortDescriptor(key: "startedAt", ascending: false)]
+        Observable<[Music]>.async { [weak self] in
+            guard let self else { return [] }
+            let ctx = self.stack.newBackgroundContext()
 
-            do {
+            return try await ctx.perform {
+                let request = NSFetchRequest<PlaybackRecord>(entityName: "PlaybackRecord")
+                request.predicate = NSPredicate(
+                    format: "moodRawValue == %@ AND isSkipped == NO",
+                    mood.rawValue
+                )
+                request.sortDescriptors = [NSSortDescriptor(key: "startedAt", ascending: false)]
+                request.relationshipKeyPathsForPrefetching = ["music"]
+
                 let records = try ctx.fetch(request)
-                let uniqueSongs = self.uniqueSongs(from: records)
-                observer.onNext(uniqueSongs)
-                observer.onCompleted()
-            } catch {
-                observer.onError(error)
+                return self.uniqueSongs(from: records)
             }
-            return Disposables.create()
         }
+        .observe(on: MainScheduler.instance)
+    }
+
+    // MARK: - 쿼리: 날씨 기반
+
+    /// 최근 N일간 특정 날씨에서 스킵하지 않고 들은 곡을 재생 횟수 기준으로 반환
+    func songsForWeather(
+        _ weather: WeatherCategory,
+        days: Int = 30,
+        limit: Int = 20
+    ) -> Observable<[(music: Music, playCount: Int)]> {
+        Observable<[(music: Music, playCount: Int)]>.async { [weak self] in
+            guard let self else { return [] }
+            let ctx = self.stack.newBackgroundContext()
+
+            return try await ctx.perform {
+                let request = NSFetchRequest<PlaybackRecord>(entityName: "PlaybackRecord")
+                let cutoffDate = DateManager.shared.daysAgo(days)
+                request.predicate = NSPredicate(
+                    format: "isSkipped == NO AND startedAt >= %@ AND moodRawValue == %@",
+                    cutoffDate as NSDate,
+                    weather.rawValue
+                )
+                request.relationshipKeyPathsForPrefetching = ["music"]
+
+                let records = try ctx.fetch(request)
+                return self.rankByPlayCount(records: records, limit: limit)
+            }
+        }
+        .observe(on: MainScheduler.instance)
     }
 
     // MARK: - 쿼리: 가장 많이 들은 곡
 
     /// 완청 횟수 기준 상위 곡 (반복 재생 탐지)
     func mostPlayedSongs(limit: Int = 20) -> Observable<[(music: Music, playCount: Int)]> {
-        Observable.create { [weak self] observer in
-            guard let self else { return Disposables.create() }
-            let ctx = self.stack.context
-            let request = NSFetchRequest<PlaybackRecord>(entityName: "PlaybackRecord")
-            request.predicate = NSPredicate(format: "isSkipped == NO")
+        Observable<[(music: Music, playCount: Int)]>.async { [weak self] in
+            guard let self else { return [] }
+            let ctx = self.stack.newBackgroundContext()
 
-            do {
+            return try await ctx.perform {
+                let request = NSFetchRequest<PlaybackRecord>(entityName: "PlaybackRecord")
+                request.predicate = NSPredicate(format: "isSkipped == NO")
+                request.relationshipKeyPathsForPrefetching = ["music"]
+
                 let records = try ctx.fetch(request)
-
-                // musicID별 그룹핑 후 카운트
-                var countMap: [String: (music: Music, count: Int)] = [:]
-                for record in records {
-                    guard let entity = record.music, let id = entity.musicID else { continue }
-                    if let existing = countMap[id] {
-                        countMap[id] = (existing.music, existing.count + 1)
-                    } else {
-                        countMap[id] = (entity.toMusic(), 1)
-                    }
-                }
-
-                let sorted = countMap.values
-                    .sorted { $0.count > $1.count }
-                    .prefix(limit)
-                    .map { (music: $0.music, playCount: $0.count) }
-
-                observer.onNext(Array(sorted))
-                observer.onCompleted()
-            } catch {
-                observer.onError(error)
+                return self.rankByPlayCount(records: records, limit: limit)
             }
-            return Disposables.create()
         }
+        .observe(on: MainScheduler.instance)
     }
 
     // MARK: - 쿼리: 시간대 기반
@@ -130,37 +138,23 @@ final class PlaybackRecordService {
         days: Int = 30,
         limit: Int = 20
     ) -> Observable<[(music: Music, playCount: Int)]> {
-        Observable.deferred { [weak self] () -> Observable<[(music: Music, playCount: Int)]> in
-            guard let self else { return .just([]) }
+        Observable<[(music: Music, playCount: Int)]>.async { [weak self] in
+            guard let self else { return [] }
             let ctx = self.stack.newBackgroundContext()
 
-            return Observable.create { observer in
-                ctx.perform {
-                    let request = NSFetchRequest<PlaybackRecord>(entityName: "PlaybackRecord")
-                    let cutoffDate = Calendar.current.date(byAdding: .day, value: -days, to: Date())!
-                    request.predicate = NSPredicate(
-                        format: "isSkipped == NO AND startedAt >= %@",
-                        cutoffDate as NSDate
-                    )
-                    request.relationshipKeyPathsForPrefetching = ["music"]
+            return try await ctx.perform {
+                let request = NSFetchRequest<PlaybackRecord>(entityName: "PlaybackRecord")
+                let cutoffDate = DateManager.shared.daysAgo(days)
+                request.predicate = NSPredicate(
+                    format: "isSkipped == NO AND startedAt >= %@",
+                    cutoffDate as NSDate
+                )
+                request.relationshipKeyPathsForPrefetching = ["music"]
 
-                    do {
-                        let records = try ctx.fetch(request)
-                        let ranked = self.rankByPlayCount(
-                            records: records,
-                            period: period,
-                            limit: limit
-                        )
-                        observer.onNext(ranked)
-                        observer.onCompleted()
-                    } catch {
-                        observer.onError(error)
-                    }
-                }
-                return Disposables.create()
+                let records = try ctx.fetch(request)
+                return self.rankByPlayCount(records: records, period: period, limit: limit)
             }
         }
-        .subscribe(on: backgroundScheduler)
         .observe(on: MainScheduler.instance)
     }
 
@@ -168,13 +162,15 @@ final class PlaybackRecordService {
 
     /// 완청률이 높은 상위 장르 목록
     func topGenres(limit: Int = 10) -> Observable<[(genre: String, avgCompletionRate: Float, playCount: Int)]> {
-        Observable.create { [weak self] observer in
-            guard let self else { return Disposables.create() }
-            let ctx = self.stack.context
-            let request = NSFetchRequest<PlaybackRecord>(entityName: "PlaybackRecord")
-            request.predicate = NSPredicate(format: "isSkipped == NO")
+        Observable<[(genre: String, avgCompletionRate: Float, playCount: Int)]>.async { [weak self] in
+            guard let self else { return [] }
+            let ctx = self.stack.newBackgroundContext()
 
-            do {
+            return try await ctx.perform {
+                let request = NSFetchRequest<PlaybackRecord>(entityName: "PlaybackRecord")
+                request.predicate = NSPredicate(format: "isSkipped == NO")
+                request.relationshipKeyPathsForPrefetching = ["music"]
+
                 let records = try ctx.fetch(request)
 
                 var genreStats: [String: (totalRate: Float, count: Int)] = [:]
@@ -186,18 +182,14 @@ final class PlaybackRecordService {
                     }
                 }
 
-                let sorted = genreStats
+                return genreStats
                     .map { (genre: $0.key, avgCompletionRate: $0.value.totalRate / Float($0.value.count), playCount: $0.value.count) }
                     .sorted { $0.playCount > $1.playCount }
                     .prefix(limit)
-
-                observer.onNext(Array(sorted))
-                observer.onCompleted()
-            } catch {
-                observer.onError(error)
+                    .map { $0 }
             }
-            return Disposables.create()
         }
+        .observe(on: MainScheduler.instance)
     }
 
     // MARK: - Private Helpers
@@ -208,13 +200,11 @@ final class PlaybackRecordService {
         period: TimePeriod,
         limit: Int
     ) -> [(music: Music, playCount: Int)] {
-        let calendar = Calendar.current
-
         // 시간대 필터 + musicID별 카운트 (MusicEntity 참조만 유지, 변환은 아직 안 함)
         var countMap: [String: (entity: MusicEntity, count: Int)] = [:]
         for record in records {
             guard let date = record.startedAt,
-                  period.containsHour(calendar.component(.hour, from: date)),
+                  period.containsHour(DateManager.shared.hour(from: date)),
                   let entity = record.music,
                   let id = entity.musicID else { continue }
 
@@ -223,6 +213,26 @@ final class PlaybackRecordService {
         }
 
         // 정렬 후 상위 limit개에 대해서만 toMusic() 실행
+        return countMap.values
+            .sorted { $0.count > $1.count }
+            .prefix(limit)
+            .map { (music: $0.entity.toMusic(), playCount: $0.count) }
+    }
+
+    /// musicID별 그룹핑 → 재생 횟수 정렬 → 상위 limit개만 toMusic() 변환
+    private func rankByPlayCount(
+        records: [PlaybackRecord],
+        limit: Int
+    ) -> [(music: Music, playCount: Int)] {
+        var countMap: [String: (entity: MusicEntity, count: Int)] = [:]
+        for record in records {
+            guard let entity = record.music,
+                  let id = entity.musicID else { continue }
+
+            let existing = countMap[id, default: (entity, 0)]
+            countMap[id] = (existing.entity, existing.count + 1)
+        }
+
         return countMap.values
             .sorted { $0.count > $1.count }
             .prefix(limit)
