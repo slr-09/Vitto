@@ -6,13 +6,15 @@ final class PlaybackRecordService {
     static let shared = PlaybackRecordService()
 
     private let stack = CoreDataStack.shared
+    private let weatherService = WeatherService.shared
     private let backgroundScheduler = ConcurrentDispatchQueueScheduler(qos: .userInitiated)
+    private let disposeBag = DisposeBag()
     private init() {}
 
     // MARK: - 기록 생성/종료
 
     /// 재생 시작 시 호출 — PlaybackRecord를 생성하고 반환
-    func startRecord(music: Music, mood: MoodType) -> PlaybackRecord {
+    func startRecord(music: Music, mood: WeatherCategory) -> PlaybackRecord {
         let ctx = stack.context
         let musicEntity = MusicEntity.findOrCreate(from: music, in: ctx)
 
@@ -26,7 +28,22 @@ final class PlaybackRecordService {
         record.moodRawValue = mood.rawValue
 
         stack.saveContext()
+        attachWeather(to: record)
         return record
+    }
+
+    /// 날씨 정보를 비동기로 조회하여 record에 저장 (실패 시 무시)
+    private func attachWeather(to record: PlaybackRecord) {
+        weatherService.fetchCurrentWeather()
+            .observe(on: MainScheduler.instance)
+            .subscribe(with: self) { owner, snapshot in
+                record.weatherCondition = snapshot.condition
+                record.weatherTemperature = snapshot.temperature
+                owner.stack.saveContext()
+            } onError: { owner, error in
+                print("[PlaybackRecordService] 날씨 저장 실패 : \(error.localizedDescription)")
+            }
+            .disposed(by: disposeBag)
     }
 
     /// 재생 종료 시 호출 — 완청률, 스킵 여부 계산 후 저장
@@ -44,7 +61,7 @@ final class PlaybackRecordService {
     // MARK: - 쿼리: 무드 기반
 
     /// 특정 무드에서 스킵하지 않고 들은 곡 조회
-    func songs(forMood mood: MoodType) -> Observable<[Music]> {
+    func songs(forMood mood: WeatherCategory) -> Observable<[Music]> {
         Observable.create { [weak self] observer in
             guard let self else { return Disposables.create() }
             let ctx = self.stack.context

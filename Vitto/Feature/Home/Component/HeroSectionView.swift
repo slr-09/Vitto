@@ -79,7 +79,7 @@ final class HeroSectionView: BaseView {
         gradientLayer.frame = bounds
     }
 
-    func configure(mood: MoodType) {
+    func configure(mood: WeatherCategory) {
         titleLabel.text = mood.title
         gradientLayer.colors = mood.gradientColors.map { $0.cgColor }
         gradientLayer.startPoint = CGPoint(x: 0, y: 0)

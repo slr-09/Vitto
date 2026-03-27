@@ -7,11 +7,12 @@ final class PlaybackTracker {
 
     static let shared = PlaybackTracker()
 
-    /// 현재 무드 — HomeViewModel 등에서 설정
-    let currentMood = BehaviorRelay<MoodType>(value: .clear)
+    /// 현재 날씨 기반 무드
+    let currentMood = BehaviorRelay<WeatherCategory>(value: .sunny)
 
     private let musicService = MusicService.shared
     private let recordService = PlaybackRecordService.shared
+    private let weatherService = WeatherService.shared
     private let disposeBag = DisposeBag()
 
     private var activeRecord: PlaybackRecord?
@@ -20,6 +21,17 @@ final class PlaybackTracker {
 
     private init() {
         observePlayback()
+        refreshMood()
+    }
+
+    // MARK: - 날씨 기반 무드 갱신
+
+    func refreshMood() {
+        weatherService.fetchCurrentWeather()
+            .map { $0.mood }
+            .catchAndReturn(.sunny)
+            .bind(to: currentMood)
+            .disposed(by: disposeBag)
     }
 
     // MARK: - 재생 관찰

@@ -30,6 +30,8 @@ final class HomeViewController: BaseViewController {
     }
 
     override func bind() {
+        LocationService.shared.requestWhenInUseAuthorization()
+
         // viewDidLoad가 호출된 시점에 바인딩하므로 Observable.just(())로 즉시 이벤트를 발생시킵니다.
         let viewDidLoadTrigger = Observable.just(())
         

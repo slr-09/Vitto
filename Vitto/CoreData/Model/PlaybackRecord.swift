@@ -12,14 +12,3 @@ class PlaybackRecord: NSManagedObject {
     @NSManaged var weatherTemperature: Double
     @NSManaged var music: MusicEntity?
 }
-
-// MARK: - Convenience
-
-extension PlaybackRecord {
-
-    /// moodRawValue를 MoodType으로 변환
-    var mood: MoodType? {
-        guard let raw = moodRawValue else { return nil }
-        return MoodType(rawValue: raw)
-    }
-}

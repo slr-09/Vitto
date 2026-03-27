@@ -14,7 +14,7 @@ final class HomeViewModel: ViewModelType {
         let recommendedItems: Driver<[Music]>
         let recommendedSectionTitle: Driver<String>
         let favoriteMixItems: Driver<[Music]>
-        let heroMood: Driver<MoodType>
+        let heroMood: Driver<WeatherCategory>
     }
 
     private let disposeBag = DisposeBag()
@@ -41,8 +41,8 @@ final class HomeViewModel: ViewModelType {
             .asDriver(onErrorJustReturn: [])
 
         let mood = input.viewDidLoad
-            .map { MoodType.rainy }
-            .asDriver(onErrorJustReturn: .clear)
+            .flatMapLatest { _ in PlaybackTracker.shared.currentMood }
+            .asDriver(onErrorJustReturn: .sunny)
 
         return Output(
             recommendedItems: recommended,
