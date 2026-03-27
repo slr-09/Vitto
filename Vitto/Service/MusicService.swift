@@ -30,6 +30,8 @@ final class MusicService {
                 self?.hasPrevious.accept(index > 0)
             })
             .disposed(by: disposeBag)
+            
+        setupPlayerObservation()
     }
 
     /// 현재 구독 상태를 앱 전역에서 참조할 수 있도록 저장
@@ -49,6 +51,50 @@ final class MusicService {
     let hasPrevious = BehaviorRelay<Bool>(value: false)
 
     private var progressTimer: Timer?
+    
+    // MARK: - Player State Observation
+    private func setupPlayerObservation() {
+        
+        // 1. 재생/일시정지 상태 관찰
+        // objectWillChange는 변경 직전에 이벤트를 발생하므로,
+        // 공영입력 후 다음 런루프에서 실제 값을 읽도록 async 사용
+        player.state.objectWillChange
+            .asObservable()
+            .subscribe(with: self) { owner, _ in
+                DispatchQueue.main.async {
+                    let isNowPlaying = (owner.player.state.playbackStatus == .playing)
+                    if owner.isPlaying.value != isNowPlaying {
+                        owner.isPlaying.accept(isNowPlaying)
+                        if isNowPlaying {
+                            owner.startProgressTimer()
+                        } else {
+                            owner.stopProgressTimer()
+                        }
+                    }
+                }
+            }
+            .disposed(by: disposeBag)
+            
+        // 2. 현재 재생 중인 트랙 상태 관찰 (이전/다음 곡 넘김 시)
+        player.queue.objectWillChange
+            .asObservable()
+            .subscribe(with: self) { owner, _ in
+                DispatchQueue.main.async {
+                    guard let currentEntry = owner.player.queue.currentEntry,
+                          case .song(let song) = currentEntry.item else { return }
+                          
+                    let currentQueue = owner.queue.value
+                    if let index = currentQueue.firstIndex(where: { $0.musicID == song.id.rawValue }) {
+                        if owner.currentIndex.value != index {
+                            owner.currentIndex.accept(index)
+                            owner.currentMusic.accept(currentQueue[index])
+                            owner.playbackTime.accept(0)
+                        }
+                    }
+                }
+            }
+            .disposed(by: disposeBag)
+    }
 
     // MARK: - 음악 재생
 
