@@ -51,8 +51,12 @@ final class WeatherDetailViewController: BaseViewController {
             .drive(detailView.tableView.rx.items(
                 cellIdentifier: SearchResultCell.identifier,
                 cellType: SearchResultCell.self
-            )) { _, music, cell in
+            )) { [weak self] _, music, cell in
                 cell.configure(with: music)
+                cell.onMoreButtonTapped = {
+                    guard let self else { return }
+                    MusicActionSheetPresenter.show(for: music, from: self, disposeBag: self.disposeBag)
+                }
             }
             .disposed(by: disposeBag)
 
@@ -62,4 +66,5 @@ final class WeatherDetailViewController: BaseViewController {
             })
             .disposed(by: disposeBag)
     }
+
 }

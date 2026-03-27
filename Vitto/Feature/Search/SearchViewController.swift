@@ -124,7 +124,8 @@ final class SearchViewController: BaseViewController {
             ) { [weak self] _, music, cell in
                 cell.configure(with: music)
                 cell.onMoreButtonTapped = {
-                    self?.showMusicActionSheet(for: music)
+                    guard let self else { return }
+                    MusicActionSheetPresenter.show(for: music, from: self, disposeBag: self.disposeBag)
                 }
             }
             .disposed(by: disposeBag)
@@ -207,26 +208,4 @@ final class SearchViewController: BaseViewController {
             .disposed(by: disposeBag)
     }
 
-    // MARK: - Action Sheet
-
-    private func showMusicActionSheet(for music: Music) {
-        let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
-
-        alert.addAction(UIAlertAction(title: "현재 재생목록에 추가", style: .default) { [weak self] _ in
-            MusicService.shared.addToQueue(music: music)
-                .subscribe(onError: { error in
-                    print("큐 추가 에러: \(error)")
-                })
-                .disposed(by: self?.disposeBag ?? DisposeBag())
-        })
-
-        alert.addAction(UIAlertAction(title: "플레이리스트에 추가", style: .default) { [weak self] _ in
-            let picker = PlaylistPickerViewController(music: music)
-            self?.present(picker, animated: true)
-        })
-
-        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
-
-        present(alert, animated: true)
-    }
 }
