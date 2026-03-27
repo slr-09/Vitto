@@ -1,8 +1,12 @@
 import UIKit
 import SnapKit
+import RxSwift
+import RxCocoa
 
 final class HeroSectionView: BaseView {
 
+    let tapEvent = PublishRelay<Void>()
+    private let disposeBag = DisposeBag()
     private let gradientLayer = CAGradientLayer()
 
     private let moodLabel: UILabel = {
@@ -72,6 +76,13 @@ final class HeroSectionView: BaseView {
 
     override func setupStyles() {
         backgroundColor = .clear
+
+        let tap = UITapGestureRecognizer()
+        addGestureRecognizer(tap)
+        tap.rx.event
+            .map { _ in }
+            .bind(to: tapEvent)
+            .disposed(by: disposeBag)
     }
 
     override func layoutSubviews() {

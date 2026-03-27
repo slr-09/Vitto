@@ -49,18 +49,11 @@ final class HomeViewController: BaseViewController {
             })
             .disposed(by: disposeBag)
 
-        output.weatherSectionTitle
-            .drive(onNext: { [weak self] title in
-                self?.homeView.weatherHeader.configure(title: title)
-            })
-            .disposed(by: disposeBag)
-
-        output.weatherItems
-            .drive(homeView.weatherCollectionView.rx.items(
-                cellIdentifier: MusicCardCell.identifier,
-                cellType: MusicCardCell.self
-            )) { _, item, cell in
-                cell.configure(title: item.title, subtitle: item.artist, imageName: item.artworkUrl)
+        homeView.heroSectionView.tapEvent
+            .withLatestFrom(output.heroMood)
+            .bind(with: self) { owner, weather in
+                let detailVC = WeatherDetailViewController(weather: weather)
+                owner.navigationController?.pushViewController(detailVC, animated: true)
             }
             .disposed(by: disposeBag)
 
