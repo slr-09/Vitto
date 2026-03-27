@@ -34,12 +34,12 @@ extension WeatherCategory {
 
     var gradientColors: [UIColor] {
         switch self {
-        case .sunny:   return [UIColor(hex: "#F9A825").withAlphaComponent(0.1), UIColor(hex: "#FF7043").withAlphaComponent(0.0)]
-        case .cloudy:  return [AppColor.primary, AppColor.secondary]
-        case .rainy:   return [AppColor.tertiary.withAlphaComponent(0.1), AppColor.secondary.withAlphaComponent(0.0)]
-        case .snowy:   return [AppColor.backgroundDeepSpace, AppColor.tertiary.withAlphaComponent(0.5)]
+        case .sunny:   return [UIColor(hex: "#F9A825").withAlphaComponent(0.1), UIColor(hex: "#FF7043").withAlphaComponent(0.05)]
+        case .cloudy:  return [AppColor.primary.withAlphaComponent(0.2), AppColor.secondary.withAlphaComponent(0.1)]
+        case .rainy:   return [AppColor.tertiary.withAlphaComponent(0.1), AppColor.secondary.withAlphaComponent(0.1)]
+        case .snowy:   return [AppColor.backgroundDeepSpace, AppColor.tertiary.withAlphaComponent(0.4)]
         case .foggy:   return [UIColor(hex: "#48474F"), AppColor.tertiary.withAlphaComponent(0.3)]
-        case .stormy:  return [UIColor(hex: "#1A0A2E"), AppColor.primaryRose.withAlphaComponent(0.6)]
+        case .stormy:  return [UIColor(hex: "#1A0A2E"), AppColor.primaryRose.withAlphaComponent(0.5)]
         case .extreme: return [UIColor(hex: "#2D0A0A"), AppColor.error.withAlphaComponent(0.7)]
         case .unknown: return [AppColor.backgroundDeepSpace, AppColor.primary.withAlphaComponent(0.4)]
         }
