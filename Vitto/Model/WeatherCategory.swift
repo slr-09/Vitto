@@ -58,4 +58,17 @@ extension WeatherCategory {
         }
     }
 
+    /// Apple Music 검색용 키워드 (청취 데이터 없을 때 fallback)
+    var searchKeyword: String {
+        switch self {
+        case .sunny:   return "Happy Sunny"
+        case .cloudy:  return "Mellow"
+        case .rainy:   return "Rainy Day"
+        case .snowy:   return "Winter Chill"
+        case .foggy:   return "Ambient"
+        case .stormy:  return "Intense"
+        case .extreme: return "Intense"
+        case .unknown: return "Chill"
+        }
+    }
 }
