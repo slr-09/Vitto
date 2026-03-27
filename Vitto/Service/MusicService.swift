@@ -8,6 +8,7 @@
 import Foundation
 import MusicKit
 import MediaPlayer
+import AVFoundation
 import RxSwift
 import RxCocoa
 
@@ -38,6 +39,12 @@ final class MusicService {
     private(set) var isSubscribed: Bool = false
 
     private let player = ApplicationMusicPlayer.shared
+
+    /// 미리듣기 전용 AVPlayer (비구독자용)
+    private var previewPlayer: AVPlayer?
+    private var previewEndObserver: Any?
+    /// 현재 미리듣기 모드인지 여부
+    private(set) var isPreviewMode: Bool = false
 
     // MARK: - App State (MiniPlayer 등에서 관찰)
     let currentMusic = BehaviorRelay<Music?>(value: nil)
@@ -100,9 +107,6 @@ final class MusicService {
 
     /// 여러 곡을 큐에 넣고 startIndex부터 재생합니다.
     func playQueue(musics: [Music], startIndex: Int) -> Observable<Void> {
-        guard isSubscribed else {
-            return .error(MusicServiceError.notSubscribed)
-        }
         guard !musics.isEmpty, startIndex >= 0, startIndex < musics.count else {
             return .error(MusicServiceError.songNotFound)
         }
@@ -119,12 +123,19 @@ final class MusicService {
                 uniqueKeysWithValues: response.items.map { ($0.id.rawValue, $0) }
             )
 
-            // fetch 성공한 곡만 필터링하여 Music-Song 쌍의 싱크 보장
+            // fetch 성공한 곡만 필터링 + previewUrl 포함
             var filteredMusics: [Music] = []
             var orderedSongs: [Song] = []
             for music in musics {
                 if let song = songMap[music.musicID] {
-                    filteredMusics.append(music)
+                    var m = music
+                    m.previewUrl = song.previewAssets?.first?.url?.absoluteString
+                    if !self.isSubscribed, let urlString = m.previewUrl, let url = URL(string: urlString) {
+                        let asset = AVURLAsset(url: url)
+                        let duration = try await asset.load(.duration)
+                        m.totalDurationMs = Int(duration.seconds * 1000)
+                    }
+                    filteredMusics.append(m)
                     orderedSongs.append(song)
                 }
             }
@@ -136,17 +147,27 @@ final class MusicService {
                 throw MusicServiceError.songNotFound
             }
 
-            player.queue = ApplicationMusicPlayer.Queue(
-                for: orderedSongs,
-                startingAt: orderedSongs[adjustedIndex]
-            )
+            if isSubscribed {
+                // 구독자: ApplicationMusicPlayer로 전체 재생
+                stopPreviewPlayer()
+                isPreviewMode = false
 
-            do {
-                try await player.play()
-            } catch {
-                isPlaying.accept(false)
-                stopProgressTimer()
-                throw error
+                player.queue = ApplicationMusicPlayer.Queue(
+                    for: orderedSongs,
+                    startingAt: orderedSongs[adjustedIndex]
+                )
+
+                do {
+                    try await player.play()
+                } catch {
+                    isPlaying.accept(false)
+                    stopProgressTimer()
+                    throw error
+                }
+            } else {
+                // 비구독자: AVPlayer로 미리듣기 재생
+                isPreviewMode = true
+                playPreview(for: filteredMusics[adjustedIndex])
             }
 
             queue.accept(filteredMusics)
@@ -159,8 +180,12 @@ final class MusicService {
 
     /// 현재 재생 큐 끝에 곡을 추가합니다.
     func addToQueue(music: Music) -> Observable<Void> {
-        guard isSubscribed else {
-            return .error(MusicServiceError.notSubscribed)
+        if isPreviewMode {
+            // 미리듣기 모드에서는 큐에만 추가
+            var currentQueue = queue.value
+            currentQueue.append(music)
+            queue.accept(currentQueue)
+            return .just(())
         }
 
         return .async { [self] in
@@ -184,11 +209,6 @@ final class MusicService {
 
     /// musicID로 곡을 재생합니다.
     func play(musicID: String) -> Observable<Void> {
-        guard isSubscribed else {
-            print("[MusicService] 구독되지 않은 사용자입니다.")
-            return .error(MusicServiceError.notSubscribed)
-        }
-
         return .async { [self] in
             let request = MusicCatalogResourceRequest<Song>(
                 matching: \.id,
@@ -201,38 +221,64 @@ final class MusicService {
                 throw MusicServiceError.songNotFound
             }
 
-            player.queue = [song]
-
-            do {
-                try await player.play()
-            } catch {
-                isPlaying.accept(false)
-                stopProgressTimer()
-                print("[MusicService] 재생 실패: \(error)")
-                throw error
+            let previewUrl = song.previewAssets?.first?.url
+            var previewDurationMs: Int?
+            if !self.isSubscribed, let previewUrl {
+                let asset = AVURLAsset(url: previewUrl)
+                let duration = try await asset.load(.duration)
+                previewDurationMs = Int(duration.seconds * 1000)
             }
 
             let playingMusic = Music(
                 musicID: song.id.rawValue,
                 title: song.title,
                 artist: song.artistName,
-                totalDurationMs: Int((song.duration ?? 0) * 1000),
+                totalDurationMs: previewDurationMs ?? Int((song.duration ?? 0) * 1000),
                 isrc: song.isrc ?? "",
                 albumTitle: song.albumTitle ?? "",
                 artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
-                genres: song.genreNames
+                genres: song.genreNames,
+                previewUrl: previewUrl?.absoluteString
             )
+
+            if isSubscribed {
+                // 구독자: 전체 재생
+                stopPreviewPlayer()
+                isPreviewMode = false
+
+                player.queue = [song]
+
+                do {
+                    try await player.play()
+                } catch {
+                    isPlaying.accept(false)
+                    stopProgressTimer()
+                    print("[MusicService] 재생 실패: \(error)")
+                    throw error
+                }
+            } else {
+                // 비구독자: 미리듣기 재생
+                isPreviewMode = true
+                playPreview(for: playingMusic)
+            }
+
+            queue.accept([playingMusic])
+            currentIndex.accept(0)
             currentMusic.accept(playingMusic)
             isPlaying.accept(true)
             startProgressTimer()
 
-            print("[MusicService] 재생 시작: \(song.title) - \(song.artistName)")
+            print("[MusicService] \(isPreviewMode ? "미리듣기" : "재생") 시작: \(song.title) - \(song.artistName)")
         }
     }
 
     /// 일시정지
     func pause() {
-        player.pause()
+        if isPreviewMode {
+            previewPlayer?.pause()
+        } else {
+            player.pause()
+        }
         isPlaying.accept(false)
         stopProgressTimer()
         print("[MusicService] 일시정지")
@@ -240,7 +286,11 @@ final class MusicService {
 
     /// 재개
     func resume() async throws {
-        try await player.play()
+        if isPreviewMode {
+            previewPlayer?.play()
+        } else {
+            try await player.play()
+        }
         isPlaying.accept(true)
         startProgressTimer()
         print("[MusicService] 재생 재개")
@@ -248,21 +298,29 @@ final class MusicService {
 
     /// 정지
     func stop() {
-        player.stop()
+        if isPreviewMode {
+            stopPreviewPlayer()
+        } else {
+            player.stop()
+        }
         isPlaying.accept(false)
         currentMusic.accept(nil)
         playbackTime.accept(0)
         stopProgressTimer()
         print("[MusicService] 정지")
     }
-    
+
     /// 다음 곡
     func skipToNextEntry() async throws {
         let currentQueue = queue.value
         let nextIndex = currentIndex.value + 1
         guard nextIndex < currentQueue.count else { return }
 
-        try await player.skipToNextEntry()
+        if isPreviewMode {
+            playPreview(for: currentQueue[nextIndex])
+        } else {
+            try await player.skipToNextEntry()
+        }
         currentIndex.accept(nextIndex)
         currentMusic.accept(currentQueue[nextIndex])
         playbackTime.accept(0)
@@ -275,23 +333,71 @@ final class MusicService {
         let prevIndex = currentIndex.value - 1
         guard prevIndex >= 0 else { return }
 
-        try await player.skipToPreviousEntry()
+        if isPreviewMode {
+            playPreview(for: currentQueue[prevIndex])
+        } else {
+            try await player.skipToPreviousEntry()
+        }
         currentIndex.accept(prevIndex)
         currentMusic.accept(currentQueue[prevIndex])
         playbackTime.accept(0)
         print("[MusicService] 이전 곡 재생: \(currentQueue[prevIndex].title)")
     }
-    
+
+    // MARK: - 미리듣기 (AVPlayer)
+
+    /// AVPlayer로 미리듣기 URL을 재생합니다.
+    private func playPreview(for music: Music) {
+        stopPreviewPlayer()
+
+        guard let urlString = music.previewUrl,
+              let url = URL(string: urlString) else {
+            print("[MusicService] 미리듣기 URL 없음: \(music.title)")
+            return
+        }
+
+        let playerItem = AVPlayerItem(url: url)
+        previewPlayer = AVPlayer(playerItem: playerItem)
+        previewPlayer?.play()
+
+        // 미리듣기 끝나면 자동으로 다음 곡 재생
+        previewEndObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: playerItem,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            Task {
+                try? await self.skipToNextEntry()
+            }
+        }
+    }
+
+    /// 미리듣기 플레이어를 정지하고 정리합니다.
+    private func stopPreviewPlayer() {
+        previewPlayer?.pause()
+        previewPlayer = nil
+        if let observer = previewEndObserver {
+            NotificationCenter.default.removeObserver(observer)
+            previewEndObserver = nil
+        }
+    }
+
     // MARK: - Progress Timer
-    
+
     private func startProgressTimer() {
         stopProgressTimer()
         progressTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             guard let self = self else { return }
-            self.playbackTime.accept(self.player.playbackTime)
+            if self.isPreviewMode {
+                let time = self.previewPlayer?.currentTime().seconds ?? 0
+                self.playbackTime.accept(time.isNaN ? 0 : time)
+            } else {
+                self.playbackTime.accept(self.player.playbackTime)
+            }
         }
     }
-    
+
     private func stopProgressTimer() {
         progressTimer?.invalidate()
         progressTimer = nil
@@ -314,7 +420,8 @@ final class MusicService {
                     isrc: song.isrc ?? "",
                     albumTitle: song.albumTitle ?? "",
                     artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
-                    genres: song.genreNames
+                    genres: song.genreNames,
+                    previewUrl: song.previewAssets?.first?.url?.absoluteString
                 )
             }
         }
@@ -343,7 +450,8 @@ final class MusicService {
                     isrc: song.isrc ?? "",
                     albumTitle: song.albumTitle ?? "",
                     artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
-                    genres: song.genreNames
+                    genres: song.genreNames,
+                    previewUrl: song.previewAssets?.first?.url?.absoluteString
                 )
             }
         }
@@ -384,7 +492,8 @@ final class MusicService {
                     isrc: song.isrc ?? "",
                     albumTitle: song.albumTitle ?? "",
                     artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
-                    genres: song.genreNames
+                    genres: song.genreNames,
+                    previewUrl: song.previewAssets?.first?.url?.absoluteString
                 )
             }
 
@@ -420,7 +529,8 @@ final class MusicService {
                     isrc: song.isrc ?? "",
                     albumTitle: song.albumTitle ?? "",
                     artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
-                    genres: song.genreNames
+                    genres: song.genreNames,
+                    previewUrl: song.previewAssets?.first?.url?.absoluteString
                 )
             }
 
