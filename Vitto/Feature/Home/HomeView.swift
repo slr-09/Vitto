@@ -16,9 +16,6 @@ final class HomeView: BaseView {
     private let recommendedHeader = SectionHeaderView()
     lazy var recommendedCollectionView = makeHorizontalCollectionView(itemSize: CGSize(width: 140, height: 185))
 
-    private let favoriteMixHeader = SectionHeaderView()
-    lazy var favoriteMixCollectionView = makeHorizontalCollectionView(itemSize: CGSize(width: 120, height: 165))
-
     private func makeHorizontalCollectionView(itemSize: CGSize) -> UICollectionView {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
@@ -37,9 +34,8 @@ final class HomeView: BaseView {
         scrollView.addSubview(contentStack)
 
         let recommendedSection = makeSectionContainer(header: recommendedHeader, collection: recommendedCollectionView)
-        let favoriteMixSection = makeSectionContainer(header: favoriteMixHeader, collection: favoriteMixCollectionView)
 
-        [heroSectionView, recommendedSection, favoriteMixSection].forEach { contentStack.addArrangedSubview($0) }
+        [heroSectionView, recommendedSection].forEach { contentStack.addArrangedSubview($0) }
     }
 
     override func setupConstraints() {
@@ -55,14 +51,10 @@ final class HomeView: BaseView {
         recommendedCollectionView.snp.makeConstraints {
             $0.height.equalTo(185)
         }
-        favoriteMixCollectionView.snp.makeConstraints {
-            $0.height.equalTo(165)
-        }
     }
 
     override func setupStyles() {
         recommendedHeader.configure(title: "Recommended for You")
-        favoriteMixHeader.configure(title: "Your Favorite Mix")
         scrollView.contentInsetAdjustmentBehavior = .never
         scrollView.showsVerticalScrollIndicator = false
         

@@ -16,16 +16,11 @@ final class HomeViewController: BaseViewController {
         super.setupAppearance()
         navigationController?.setNavigationBarHidden(false, animated: false)
         
-        let settingsButton = UIButton(type: .system)
-        settingsButton.setImage(UIImage(systemName: "gearshape.fill"), for: .normal)
-        settingsButton.tintColor = AppColor.onSurfaceVariant
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: settingsButton)
-        
         let titleLabel = UILabel()
         titleLabel.font = AppFont.displayMD
         titleLabel.text = "Vitto"
         titleLabel.textColor = AppColor.onBackground
-        titleLabel.textAlignment = .center
+        titleLabel.textAlignment = .left
         navigationItem.titleView = titleLabel
     }
 
@@ -68,15 +63,6 @@ final class HomeViewController: BaseViewController {
                 cellType: MusicCardCell.self
             )) { _, item, cell in
                 cell.configure(title: item.title, subtitle: item.artist, imageName: item.artworkUrl)
-            }
-            .disposed(by: disposeBag)
-
-        output.favoriteMixItems
-            .drive(homeView.favoriteMixCollectionView.rx.items(
-                cellIdentifier: MusicCardCell.identifier,
-                cellType: MusicCardCell.self
-            )) { _, item, cell in
-                cell.configure(title: item.title, subtitle: item.albumTitle, imageName: item.artworkUrl)
             }
             .disposed(by: disposeBag)
 

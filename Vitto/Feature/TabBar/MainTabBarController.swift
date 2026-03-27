@@ -51,7 +51,7 @@ final class MainTabBarController: UITabBarController {
             selectedImage: UIImage(systemName: "chart.bar.fill")
         )
 
-        viewControllers = [homeNav, searchNav, playlistNav, statsVC]
+        viewControllers = [homeNav, searchNav, playlistNav]
     }
     
     private func updateChildSafeAreaForMiniPlayer(isVisible: Bool) {
