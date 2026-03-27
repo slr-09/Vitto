@@ -8,6 +8,8 @@ class PlaybackRecord: NSManagedObject {
     @NSManaged var isCompleted: Bool
     @NSManaged var isSkipped: Bool
     @NSManaged var moodRawValue: String?
+    @NSManaged var weatherCondition: String?
+    @NSManaged var weatherTemperature: Double
     @NSManaged var music: MusicEntity?
 }
 

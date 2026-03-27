@@ -121,6 +121,16 @@ final class CoreDataStack {
         moodRawValue.name = "moodRawValue"
         moodRawValue.attributeType = .stringAttributeType
 
+        let weatherCondition = NSAttributeDescription()
+        weatherCondition.name = "weatherCondition"
+        weatherCondition.attributeType = .stringAttributeType
+        weatherCondition.isOptional = true
+
+        let weatherTemperature = NSAttributeDescription()
+        weatherTemperature.name = "weatherTemperature"
+        weatherTemperature.attributeType = .doubleAttributeType
+        weatherTemperature.defaultValue = 0
+
         // MARK: PlaylistEntity
         let playlistEntity = NSEntityDescription()
         playlistEntity.name = "PlaylistEntity"
@@ -263,7 +273,8 @@ final class CoreDataStack {
         recordEntity.properties = [
             id, startedAt, listenedDurationMs,
             completionRate, isCompleted, isSkipped,
-            moodRawValue, recordToMusic
+            moodRawValue, weatherCondition, weatherTemperature,
+            recordToMusic
         ]
 
         playlistEntity.properties = [
