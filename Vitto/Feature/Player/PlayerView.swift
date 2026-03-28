@@ -92,6 +92,11 @@ final class PlayerView: UIView {
         return lbl
     }()
 
+    // MARK: - Layout State
+
+    private var isLandscapeLayout = false
+    private var isSubscribed = true
+
     // MARK: - Subscribe Banner
 
     private var sliderTopToBanner: Constraint?
@@ -187,12 +192,22 @@ final class PlayerView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupHierarchy()
-        setupConstraints()
         setupGradient()
+        applyConstraints()
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        gradientLayer?.frame = bounds
+
+        let landscape = bounds.width > bounds.height
+        guard landscape != isLandscapeLayout else { return }
+        isLandscapeLayout = landscape
+        applyConstraints()
+    }
 
     // MARK: - Layout
 
@@ -213,66 +228,132 @@ final class PlayerView: UIView {
         [prevButton, playPauseButton, nextButton].forEach { controlStack.addArrangedSubview($0) }
     }
 
-    private func setupConstraints() {
-        backgroundImageView.snp.makeConstraints { $0.edges.equalToSuperview() }
-        backgroundBlurView.snp.makeConstraints { $0.edges.equalToSuperview() }
-        gradientOverlayView.snp.makeConstraints { $0.edges.equalToSuperview() }
+    private func applyConstraints() {
+        // 공통 배경 제약조건
+        [backgroundImageView, backgroundBlurView, gradientOverlayView].forEach {
+            $0.snp.remakeConstraints { $0.edges.equalToSuperview() }
+        }
 
-        closeButton.snp.makeConstraints {
+        closeButton.snp.remakeConstraints {
             $0.top.equalTo(safeAreaLayoutGuide).offset(AppSpacing.md)
-            $0.leading.equalToSuperview().inset(AppSpacing.md)
+            $0.leading.equalTo(safeAreaLayoutGuide).inset(AppSpacing.md)
             $0.size.equalTo(44)
         }
 
-        moreButton.snp.makeConstraints {
+        moreButton.snp.remakeConstraints {
             $0.centerY.equalTo(closeButton)
-            $0.trailing.equalToSuperview().inset(AppSpacing.md)
+            $0.trailing.equalTo(safeAreaLayoutGuide).inset(AppSpacing.md)
             $0.size.equalTo(44)
         }
 
-        artworkImageView.snp.makeConstraints {
+        playPauseButton.snp.remakeConstraints { $0.size.equalTo(80) }
+
+        if isLandscapeLayout {
+            applyLandscapeConstraints()
+        } else {
+            applyPortraitConstraints()
+        }
+
+        applySubscribedConstraints()
+    }
+
+    private func applyPortraitConstraints() {
+        artworkImageView.snp.remakeConstraints {
             $0.top.equalTo(closeButton.snp.bottom).offset(AppSpacing.xxl)
             $0.centerX.equalToSuperview()
             $0.width.equalToSuperview().multipliedBy(0.80)
             $0.height.equalTo(artworkImageView.snp.width)
         }
 
-        trackInfoStack.snp.makeConstraints {
+        trackInfoStack.snp.remakeConstraints {
             $0.top.equalTo(artworkImageView.snp.bottom).offset(AppSpacing.xl)
             $0.horizontalEdges.equalToSuperview().inset(AppSpacing.xl)
         }
 
-        subscribeBannerButton.snp.makeConstraints {
+        subscribeBannerButton.snp.remakeConstraints {
             $0.top.equalTo(trackInfoStack.snp.bottom).offset(AppSpacing.md)
             $0.centerX.equalToSuperview()
         }
 
-        slider.snp.makeConstraints {
+        slider.snp.remakeConstraints {
             sliderTopToBanner = $0.top.equalTo(subscribeBannerButton.snp.bottom).offset(AppSpacing.md).constraint
             sliderTopToTrackInfo = $0.top.equalTo(trackInfoStack.snp.bottom).offset(AppSpacing.md).constraint
             $0.horizontalEdges.equalToSuperview().inset(AppSpacing.xl)
         }
-        sliderTopToTrackInfo?.deactivate()
 
-        currentTimeLabel.snp.makeConstraints {
+        currentTimeLabel.snp.remakeConstraints {
             $0.top.equalTo(slider.snp.bottom).offset(AppSpacing.xs)
             $0.leading.equalTo(slider)
         }
 
-        totalTimeLabel.snp.makeConstraints {
+        totalTimeLabel.snp.remakeConstraints {
             $0.top.equalTo(currentTimeLabel)
             $0.trailing.equalTo(slider)
         }
 
-        playPauseButton.snp.makeConstraints { $0.size.equalTo(80) }
-
-        controlStack.snp.makeConstraints {
+        controlStack.snp.remakeConstraints {
             $0.top.equalTo(currentTimeLabel.snp.bottom).offset(AppSpacing.xl)
             $0.horizontalEdges.equalToSuperview().inset(AppSpacing.xl)
         }
     }
 
+    private func applyLandscapeConstraints() {
+        artworkImageView.snp.remakeConstraints {
+            $0.top.equalTo(closeButton.snp.bottom).offset(AppSpacing.md)
+            $0.leading.equalTo(safeAreaLayoutGuide).inset(AppSpacing.xl)
+            $0.bottom.lessThanOrEqualTo(safeAreaLayoutGuide).inset(AppSpacing.md)
+            $0.width.equalToSuperview().multipliedBy(0.38)
+            $0.height.equalTo(artworkImageView.snp.width)
+        }
+
+        trackInfoStack.snp.remakeConstraints {
+            $0.top.equalTo(closeButton.snp.bottom).offset(AppSpacing.lg)
+            $0.leading.equalTo(artworkImageView.snp.trailing).offset(AppSpacing.xl)
+            $0.trailing.equalTo(safeAreaLayoutGuide).inset(AppSpacing.xl)
+        }
+
+        subscribeBannerButton.snp.remakeConstraints {
+            $0.top.equalTo(trackInfoStack.snp.bottom).offset(AppSpacing.md)
+            $0.leading.equalTo(trackInfoStack)
+        }
+
+        slider.snp.remakeConstraints {
+            sliderTopToBanner = $0.top.equalTo(subscribeBannerButton.snp.bottom).offset(AppSpacing.md).constraint
+            sliderTopToTrackInfo = $0.top.equalTo(trackInfoStack.snp.bottom).offset(AppSpacing.md).constraint
+            $0.leading.equalTo(trackInfoStack)
+            $0.trailing.equalTo(safeAreaLayoutGuide).inset(AppSpacing.xl)
+        }
+
+        currentTimeLabel.snp.remakeConstraints {
+            $0.top.equalTo(slider.snp.bottom).offset(AppSpacing.xs)
+            $0.leading.equalTo(slider)
+        }
+
+        totalTimeLabel.snp.remakeConstraints {
+            $0.top.equalTo(currentTimeLabel)
+            $0.trailing.equalTo(slider)
+        }
+
+        controlStack.snp.remakeConstraints {
+            $0.top.equalTo(currentTimeLabel.snp.bottom).offset(AppSpacing.lg)
+            $0.leading.equalTo(trackInfoStack)
+            $0.trailing.equalTo(safeAreaLayoutGuide).inset(AppSpacing.xl)
+        }
+    }
+
+    private func applySubscribedConstraints() {
+        if isSubscribed {
+            sliderTopToBanner?.deactivate()
+            sliderTopToTrackInfo?.activate()
+        } else {
+            sliderTopToTrackInfo?.deactivate()
+            sliderTopToBanner?.activate()
+        }
+    }
+
     // MARK: - Gradient
+
+    private var gradientLayer: CAGradientLayer?
 
     private func setupGradient() {
         let gradient = CAGradientLayer()
@@ -281,7 +362,7 @@ final class PlayerView: UIView {
             UIColor.black.withAlphaComponent(0.85).cgColor
         ]
         gradient.locations = [0.0, 1.0]
-        gradient.frame = UIScreen.main.bounds
+        gradientLayer = gradient
         gradientOverlayView.layer.addSublayer(gradient)
     }
 
@@ -300,15 +381,10 @@ final class PlayerView: UIView {
         }
     }
 
-    func setSubscribed(_ isSubscribed: Bool) {
-        subscribeBannerButton.isHidden = isSubscribed
-        if isSubscribed {
-            sliderTopToBanner?.deactivate()
-            sliderTopToTrackInfo?.activate()
-        } else {
-            sliderTopToTrackInfo?.deactivate()
-            sliderTopToBanner?.activate()
-        }
+    func setSubscribed(_ subscribed: Bool) {
+        isSubscribed = subscribed
+        subscribeBannerButton.isHidden = subscribed
+        applySubscribedConstraints()
     }
 
     func setPlayingState(_ isPlaying: Bool) {
