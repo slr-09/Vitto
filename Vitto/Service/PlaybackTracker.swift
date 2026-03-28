@@ -18,6 +18,8 @@ final class PlaybackTracker {
     private var activeRecord: PlaybackRecord?
     /// playbackTime의 마지막 값을 저장 (곡 전환 시 0으로 리셋되기 전 값)
     private var lastPlaybackTime: TimeInterval = 0
+    /// currentMusic의 totalDurationMs를 저장 (곡 전환 시 nil이 되기 전 값)
+    private var lastTotalDurationMs: Int = 0
 
     private init() {
         observePlayback()
@@ -54,6 +56,7 @@ final class PlaybackTracker {
                 self.lastPlaybackTime = 0
 
                 guard let music else { return }
+                self.lastTotalDurationMs = music.totalDurationMs
                 self.startTracking(music: music)
             })
             .disposed(by: disposeBag)
@@ -73,9 +76,10 @@ final class PlaybackTracker {
         guard let record = activeRecord else { return }
 
         let listenedMs = Int(lastPlaybackTime * 1000)
-        let totalMs = record.music.flatMap { Int($0.totalDurationMs) } ?? 0
+        // MusicService가 보관 중인 Music의 totalDurationMs 사용 (미리듣기 시 미리듣기 길이로 덮어쓴 값)
+        let totalMs = lastTotalDurationMs
 
-        recordService.endRecord(record, listenedMs: listenedMs, totalMs: totalMs)
+        recordService.endRecord(record, listenedMs: listenedMs, totalMs: totalMs, isPreview: musicService.isPreviewMode)
         print("[PlaybackTracker] 기록 종료: 들은 시간 \(Double(listenedMs) / 1000.0)s / 전체 \(Double(totalMs) / 1000.0)s")
 
         activeRecord = nil

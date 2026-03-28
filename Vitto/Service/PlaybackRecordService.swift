@@ -46,13 +46,23 @@ final class PlaybackRecordService {
     }
 
     /// 재생 종료 시 호출 — 완청률, 스킵 여부 계산 후 저장
-    func endRecord(_ record: PlaybackRecord, listenedMs: Int, totalMs: Int) {
+    /// isPreview가 true이면 미리듣기 길이 기준으로 판정
+    func endRecord(_ record: PlaybackRecord, listenedMs: Int, totalMs: Int, isPreview: Bool = false) {
         record.listenedDurationMs = Int32(listenedMs)
 
         let rate = totalMs > 0 ? Float(listenedMs) / Float(totalMs) : 0
         record.completionRate = min(rate, 1.0)
-        record.isCompleted = rate >= 0.9
-        record.isSkipped = listenedMs < 30_000
+
+        if isPreview {
+            // 미리듣기: 미리듣기 길이 대비 80% 이상 들으면 완청, 50% 미만이면 스킵
+            record.isCompleted = rate >= 0.8
+            record.isSkipped = rate < 0.5
+            print(record)
+        } else {
+            // 정식 재생: 기존 기준
+            record.isCompleted = rate >= 0.9
+            record.isSkipped = listenedMs < 30_000
+        }
 
         stack.saveContext()
     }

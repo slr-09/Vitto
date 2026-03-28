@@ -346,7 +346,11 @@ final class MusicService {
     func skipToNextEntry() async throws {
         let currentQueue = queue.value
         let nextIndex = currentIndex.value + 1
-        guard nextIndex < currentQueue.count else { return }
+        guard nextIndex < currentQueue.count else {
+            // 마지막 곡 → 재생 종료
+            stop()
+            return
+        }
 
         if isPreviewMode {
             playPreview(for: currentQueue[nextIndex])
