@@ -4,15 +4,21 @@ import RxSwift
 import RxCocoa
 
 final class MainTabBarController: UITabBarController {
-    
+
     private let miniPlayerView = MiniPlayerView()
     private let disposeBag = DisposeBag()
-    
+    private var isTabBarAtBottom: Bool?
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupAppearance()
         setupViewControllers()
         setupMiniPlayer()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        applyMiniPlayerConstraints()
     }
     
     private func setupAppearance() {
@@ -63,14 +69,29 @@ final class MainTabBarController: UITabBarController {
         }
     }
 
-    private func setupMiniPlayer() {
-        view.addSubview(miniPlayerView)
-        
-        miniPlayerView.snp.makeConstraints {
-            $0.bottom.equalTo(tabBar.snp.top).offset(-AppSpacing.sm)
+    private var tabBarSharesAncestor: Bool {
+        tabBar.isDescendant(of: view)
+    }
+
+    private func applyMiniPlayerConstraints() {
+        let tabBarAtBottom = tabBarSharesAncestor && tabBar.frame.origin.y > view.bounds.midY
+        guard tabBarAtBottom != isTabBarAtBottom else { return }
+        isTabBarAtBottom = tabBarAtBottom
+
+        miniPlayerView.snp.remakeConstraints {
+            if tabBarAtBottom {
+                $0.bottom.equalTo(tabBar.snp.top).offset(-AppSpacing.sm)
+            } else {
+                $0.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom).offset(-AppSpacing.sm)
+            }
             $0.centerX.equalToSuperview()
             $0.horizontalEdges.equalToSuperview()
         }
+    }
+
+    private func setupMiniPlayer() {
+        view.addSubview(miniPlayerView)
+        applyMiniPlayerConstraints()
         
         // MusicService 상태 바인딩
         Observable.combineLatest(
