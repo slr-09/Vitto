@@ -169,10 +169,13 @@
 				DEVELOPMENT_TEAM = ZT27N85LQ5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Vitto/Info.plist;
+				INFOPLIST_KEY_NSAppleMusicUsageDescription = "음악 취향을 분석하고 맞춤 추천을 제공하기 위해 Apple Music 접근 권한이 필요합니다.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "현재 날씨 정보를 기록하기 위해 위치 권한이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -206,10 +209,13 @@
 				DEVELOPMENT_TEAM = ZT27N85LQ5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Vitto/Info.plist;
+				INFOPLIST_KEY_NSAppleMusicUsageDescription = "음악 취향을 분석하고 맞춤 추천을 제공하기 위해 Apple Music 접근 권한이 필요합니다.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "현재 날씨 정보를 기록하기 위해 위치 권한이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
