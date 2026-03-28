@@ -7,6 +7,7 @@ import UIKit
 import SnapKit
 import RxSwift
 import RxCocoa
+import StoreKit
 
 final class PlayerViewController: UIViewController {
 
@@ -31,6 +32,7 @@ final class PlayerViewController: UIViewController {
         bind()
         setupSliderEvents()
         setupPanToDismiss()
+        setupSubscribeBanner()
     }
 
     // MARK: - Binding
@@ -81,6 +83,22 @@ final class PlayerViewController: UIViewController {
 
         output.totalTimeText
             .drive(playerView.totalTimeLabel.rx.text)
+            .disposed(by: disposeBag)
+    }
+
+    // MARK: - Subscribe Banner
+
+    private func setupSubscribeBanner() {
+        playerView.setSubscribed(MusicService.shared.isSubscribed)
+
+        playerView.subscribeBannerButton.rx.tap
+            .bind(with: self) { owner, _ in
+                let setupVC = SKCloudServiceSetupViewController()
+                setupVC.load(options: [.action: SKCloudServiceSetupAction.subscribe]) { success, error in
+                    guard success else { return }
+                    owner.present(setupVC, animated: true)
+                }
+            }
             .disposed(by: disposeBag)
     }
 

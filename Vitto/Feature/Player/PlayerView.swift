@@ -92,6 +92,30 @@ final class PlayerView: UIView {
         return lbl
     }()
 
+    // MARK: - Subscribe Banner
+
+    private var sliderTopToBanner: Constraint?
+    private var sliderTopToTrackInfo: Constraint?
+
+    let subscribeBannerButton: UIButton = {
+        var config = UIButton.Configuration.filled()
+        config.title = "Apple Music를 구독하고 전체 곡을 감상하세요"
+        config.image = UIImage(systemName: "apple.logo")
+        config.imagePadding = 8
+        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
+        config.cornerStyle = .capsule
+        config.baseBackgroundColor = AppColor.primary
+        config.baseForegroundColor = AppColor.onBackground
+        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var out = incoming
+            out.font = AppFont.caption
+            return out
+        }
+        let btn = UIButton(configuration: config)
+        btn.isHidden = true
+        return btn
+    }()
+
     // MARK: - Progress
 
     let slider: UISlider = {
@@ -177,6 +201,7 @@ final class PlayerView: UIView {
          closeButton, moreButton,
          artworkImageView,
          trackInfoStack,
+         subscribeBannerButton,
          slider, currentTimeLabel, totalTimeLabel,
          controlStack
         ].forEach { addSubview($0) }
@@ -217,10 +242,17 @@ final class PlayerView: UIView {
             $0.horizontalEdges.equalToSuperview().inset(AppSpacing.xl)
         }
 
+        subscribeBannerButton.snp.makeConstraints {
+            $0.top.equalTo(trackInfoStack.snp.bottom).offset(AppSpacing.md)
+            $0.centerX.equalToSuperview()
+        }
+
         slider.snp.makeConstraints {
-            $0.top.equalTo(trackInfoStack.snp.bottom).offset(AppSpacing.lg)
+            sliderTopToBanner = $0.top.equalTo(subscribeBannerButton.snp.bottom).offset(AppSpacing.md).constraint
+            sliderTopToTrackInfo = $0.top.equalTo(trackInfoStack.snp.bottom).offset(AppSpacing.md).constraint
             $0.horizontalEdges.equalToSuperview().inset(AppSpacing.xl)
         }
+        sliderTopToTrackInfo?.deactivate()
 
         currentTimeLabel.snp.makeConstraints {
             $0.top.equalTo(slider.snp.bottom).offset(AppSpacing.xs)
@@ -265,6 +297,17 @@ final class PlayerView: UIView {
         } else {
             artworkImageView.image = nil
             backgroundImageView.image = nil
+        }
+    }
+
+    func setSubscribed(_ isSubscribed: Bool) {
+        subscribeBannerButton.isHidden = isSubscribed
+        if isSubscribed {
+            sliderTopToBanner?.deactivate()
+            sliderTopToTrackInfo?.activate()
+        } else {
+            sliderTopToTrackInfo?.deactivate()
+            sliderTopToBanner?.activate()
         }
     }
 
