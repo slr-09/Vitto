@@ -5,7 +5,7 @@
 //  Created by 가은 on 3/21/26.
 //
 
-import Foundation
+import UIKit
 import MusicKit
 import MediaPlayer
 import AVFoundation
@@ -31,8 +31,10 @@ final class MusicService {
                 self?.hasPrevious.accept(index > 0)
             })
             .disposed(by: disposeBag)
-            
+
         setupPlayerObservation()
+        setupRemoteCommands()
+        setupAudioSession()
     }
 
     /// 현재 구독 상태를 앱 전역에서 참조할 수 있도록 저장
@@ -389,6 +391,7 @@ final class MusicService {
         let playerItem = AVPlayerItem(url: url)
         previewPlayer = AVPlayer(playerItem: playerItem)
         previewPlayer?.play()
+        updateNowPlayingInfo(for: music)
 
         // 미리듣기 끝나면 자동으로 다음 곡 재생
         previewEndObserver = NotificationCenter.default.addObserver(
@@ -411,6 +414,75 @@ final class MusicService {
             NotificationCenter.default.removeObserver(observer)
             previewEndObserver = nil
         }
+    }
+
+    // MARK: - Now Playing Info (미리듣기용)
+
+    private func setupAudioSession() {
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+        try? AVAudioSession.sharedInstance().setActive(true)
+    }
+
+    private func setupRemoteCommands() {
+        let center = MPRemoteCommandCenter.shared()
+
+        center.playCommand.addTarget { [weak self] _ in
+            guard let self, self.isPreviewMode else { return .commandFailed }
+            self.previewPlayer?.play()
+            self.isPlaying.accept(true)
+            self.startProgressTimer()
+            self.updateNowPlayingPlaybackInfo()
+            return .success
+        }
+
+        center.pauseCommand.addTarget { [weak self] _ in
+            guard let self, self.isPreviewMode else { return .commandFailed }
+            self.previewPlayer?.pause()
+            self.isPlaying.accept(false)
+            self.stopProgressTimer()
+            self.updateNowPlayingPlaybackInfo()
+            return .success
+        }
+
+        center.nextTrackCommand.addTarget { [weak self] _ in
+            guard let self, self.isPreviewMode else { return .commandFailed }
+            Task { try? await self.skipToNextEntry() }
+            return .success
+        }
+
+        center.previousTrackCommand.addTarget { [weak self] _ in
+            guard let self, self.isPreviewMode else { return .commandFailed }
+            Task { try? await self.skipToPreviousEntry() }
+            return .success
+        }
+    }
+
+    private func updateNowPlayingInfo(for music: Music) {
+        var info: [String: Any] = [
+            MPMediaItemPropertyTitle: music.title,
+            MPMediaItemPropertyArtist: music.artist,
+            MPMediaItemPropertyPlaybackDuration: Double(music.totalDurationMs) / 1000.0,
+            MPNowPlayingInfoPropertyElapsedPlaybackTime: previewPlayer?.currentTime().seconds ?? 0,
+            MPNowPlayingInfoPropertyPlaybackRate: isPlaying.value ? 1.0 : 0.0
+        ]
+
+        if let url = URL(string: music.artworkUrl) {
+            URLSession.shared.dataTask(with: url) { data, _, _ in
+                guard let data, let image = UIImage(data: data) else { return }
+                let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+                info[MPMediaItemPropertyArtwork] = artwork
+                MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+            }.resume()
+        } else {
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+        }
+    }
+
+    private func updateNowPlayingPlaybackInfo() {
+        guard var info = MPNowPlayingInfoCenter.default().nowPlayingInfo else { return }
+        info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = previewPlayer?.currentTime().seconds ?? 0
+        info[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying.value ? 1.0 : 0.0
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
     }
 
     // MARK: - Progress Timer
