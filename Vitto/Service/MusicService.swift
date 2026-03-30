@@ -34,8 +34,7 @@ final class MusicService {
 
         setupPlayerObservation()
         setupPreviewPlayer()
-        setupRemoteCommands()
-        setupAudioSession()
+        previewPlayer.setupAudioSession()
     }
 
     private let authService = MusicAuthService.shared
@@ -348,6 +347,7 @@ final class MusicService {
 
         if isPreviewMode {
             previewPlayer.play(for: currentQueue[nextIndex])
+            updateNowPlayingInfo(for: currentQueue[nextIndex])
         } else {
             try await player.skipToNextEntry()
         }
@@ -365,6 +365,7 @@ final class MusicService {
 
         if isPreviewMode {
             previewPlayer.play(for: currentQueue[prevIndex])
+            updateNowPlayingInfo(for: currentQueue[prevIndex])
         } else {
             try await player.skipToPreviousEntry()
         }
@@ -381,47 +382,30 @@ final class MusicService {
             guard let self else { return }
             Task { try? await self.skipToNextEntry() }
         }
-    }
 
-    // MARK: - Now Playing Info (미리듣기용)
+        previewPlayer.setupRemoteCommands()
 
-    private func setupAudioSession() {
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-        try? AVAudioSession.sharedInstance().setActive(true)
-    }
-
-    private func setupRemoteCommands() {
-        let center = MPRemoteCommandCenter.shared()
-
-        center.playCommand.addTarget { [weak self] _ in
-            guard let self, self.isPreviewMode else { return .commandFailed }
-            self.previewPlayer.resume()
-            self.isPlaying.accept(true)
-            self.startProgressTimer()
-            self.updateNowPlayingPlaybackInfo()
-            return .success
-        }
-
-        center.pauseCommand.addTarget { [weak self] _ in
-            guard let self, self.isPreviewMode else { return .commandFailed }
-            self.previewPlayer.pause()
-            self.isPlaying.accept(false)
-            self.stopProgressTimer()
-            self.updateNowPlayingPlaybackInfo()
-            return .success
-        }
-
-        center.nextTrackCommand.addTarget { [weak self] _ in
-            guard let self, self.isPreviewMode else { return .commandFailed }
-            Task { try? await self.skipToNextEntry() }
-            return .success
-        }
-
-        center.previousTrackCommand.addTarget { [weak self] _ in
-            guard let self, self.isPreviewMode else { return .commandFailed }
-            Task { try? await self.skipToPreviousEntry() }
-            return .success
-        }
+        previewPlayer.remoteCommand
+            .bind(with: self) { owner, command in
+                guard owner.isPreviewMode else { return }
+                switch command {
+                case .play:
+                    owner.previewPlayer.resume()
+                    owner.isPlaying.accept(true)
+                    owner.startProgressTimer()
+                    owner.updateNowPlayingPlaybackInfo()
+                case .pause:
+                    owner.previewPlayer.pause()
+                    owner.isPlaying.accept(false)
+                    owner.stopProgressTimer()
+                    owner.updateNowPlayingPlaybackInfo()
+                case .next:
+                    Task { try? await owner.skipToNextEntry() }
+                case .previous:
+                    Task { try? await owner.skipToPreviousEntry() }
+                }
+            }
+            .disposed(by: disposeBag)
     }
 
     private func updateNowPlayingInfo(for music: Music) {

@@ -6,11 +6,20 @@
 //
 
 import AVFoundation
+import MediaPlayer
+import RxCocoa
+
+enum RemoteCommand {
+    case play, pause, next, previous
+}
 
 final class PreviewPlayer {
 
     /// 재생이 끝났을 때 호출되는 콜백
     var onPlaybackEnded: (() -> Void)?
+
+    /// 잠금화면/제어센터 리모트 커맨드 이벤트
+    let remoteCommand = PublishRelay<RemoteCommand>()
 
     private var player: AVPlayer?
     private var endObserver: Any?
@@ -19,6 +28,13 @@ final class PreviewPlayer {
     var currentTime: TimeInterval {
         let time = player?.currentTime().seconds ?? 0
         return time.isNaN ? 0 : time
+    }
+
+    // MARK: - Audio Session
+    /// 백그라운드 재생
+    func setupAudioSession() {
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+        try? AVAudioSession.sharedInstance().setActive(true)
     }
 
     // MARK: - Playback
@@ -59,6 +75,32 @@ final class PreviewPlayer {
         if let observer = endObserver {
             NotificationCenter.default.removeObserver(observer)
             endObserver = nil
+        }
+    }
+
+    // MARK: - Remote Commands (잠금화면/제어센터)
+
+    func setupRemoteCommands() {
+        let center = MPRemoteCommandCenter.shared()
+
+        center.playCommand.addTarget { [weak self] _ in
+            self?.remoteCommand.accept(.play)
+            return .success
+        }
+
+        center.pauseCommand.addTarget { [weak self] _ in
+            self?.remoteCommand.accept(.pause)
+            return .success
+        }
+
+        center.nextTrackCommand.addTarget { [weak self] _ in
+            self?.remoteCommand.accept(.next)
+            return .success
+        }
+
+        center.previousTrackCommand.addTarget { [weak self] _ in
+            self?.remoteCommand.accept(.previous)
+            return .success
         }
     }
 }
