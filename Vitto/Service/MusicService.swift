@@ -33,6 +33,7 @@ final class MusicService {
             .disposed(by: disposeBag)
 
         setupPlayerObservation()
+        setupPreviewPlayer()
         setupRemoteCommands()
         setupAudioSession()
     }
@@ -41,9 +42,8 @@ final class MusicService {
 
     private let player = ApplicationMusicPlayer.shared
 
-    /// 미리듣기 전용 AVPlayer (비구독자용)
-    private var previewPlayer: AVPlayer?
-    private var previewEndObserver: Any?
+    /// 미리듣기 전용 플레이어 (비구독자용)
+    let previewPlayer = PreviewPlayer()
     /// 현재 미리듣기 모드인지 여부
     private(set) var isPreviewMode: Bool = false
 
@@ -150,7 +150,7 @@ final class MusicService {
 
             if authService.isSubscribed {
                 // 구독자: ApplicationMusicPlayer로 전체 재생
-                stopPreviewPlayer()
+                previewPlayer.stop()
                 isPreviewMode = false
 
                 player.queue = ApplicationMusicPlayer.Queue(
@@ -168,7 +168,8 @@ final class MusicService {
             } else {
                 // 비구독자: AVPlayer로 미리듣기 재생
                 isPreviewMode = true
-                playPreview(for: filteredMusics[adjustedIndex])
+                previewPlayer.play(for: filteredMusics[adjustedIndex])
+                updateNowPlayingInfo(for: filteredMusics[adjustedIndex])
             }
 
             queue.accept(filteredMusics)
@@ -267,7 +268,7 @@ final class MusicService {
 
             if authService.isSubscribed {
                 // 구독자: 전체 재생
-                stopPreviewPlayer()
+                previewPlayer.stop()
                 isPreviewMode = false
 
                 player.queue = [song]
@@ -283,7 +284,8 @@ final class MusicService {
             } else {
                 // 비구독자: 미리듣기 재생
                 isPreviewMode = true
-                playPreview(for: playingMusic)
+                previewPlayer.play(for: playingMusic)
+                updateNowPlayingInfo(for: playingMusic)
             }
 
             queue.accept([playingMusic])
@@ -299,7 +301,7 @@ final class MusicService {
     /// 일시정지
     func pause() {
         if isPreviewMode {
-            previewPlayer?.pause()
+            previewPlayer.pause()
         } else {
             player.pause()
         }
@@ -311,7 +313,7 @@ final class MusicService {
     /// 재개
     func resume() async throws {
         if isPreviewMode {
-            previewPlayer?.play()
+            previewPlayer.resume()
         } else {
             try await player.play()
         }
@@ -323,7 +325,7 @@ final class MusicService {
     /// 정지
     func stop() {
         if isPreviewMode {
-            stopPreviewPlayer()
+            previewPlayer.stop()
         } else {
             player.stop()
         }
@@ -345,7 +347,7 @@ final class MusicService {
         }
 
         if isPreviewMode {
-            playPreview(for: currentQueue[nextIndex])
+            previewPlayer.play(for: currentQueue[nextIndex])
         } else {
             try await player.skipToNextEntry()
         }
@@ -362,7 +364,7 @@ final class MusicService {
         guard prevIndex >= 0 else { return }
 
         if isPreviewMode {
-            playPreview(for: currentQueue[prevIndex])
+            previewPlayer.play(for: currentQueue[prevIndex])
         } else {
             try await player.skipToPreviousEntry()
         }
@@ -372,43 +374,12 @@ final class MusicService {
         print("[MusicService] 이전 곡 재생: \(currentQueue[prevIndex].title)")
     }
 
-    // MARK: - 미리듣기 (AVPlayer)
+    // MARK: - 미리듣기 (PreviewPlayer)
 
-    /// AVPlayer로 미리듣기 URL을 재생합니다.
-    private func playPreview(for music: Music) {
-        stopPreviewPlayer()
-
-        guard let urlString = music.previewUrl,
-              let url = URL(string: urlString) else {
-            print("[MusicService] 미리듣기 URL 없음: \(music.title)")
-            return
-        }
-
-        let playerItem = AVPlayerItem(url: url)
-        previewPlayer = AVPlayer(playerItem: playerItem)
-        previewPlayer?.play()
-        updateNowPlayingInfo(for: music)
-
-        // 미리듣기 끝나면 자동으로 다음 곡 재생
-        previewEndObserver = NotificationCenter.default.addObserver(
-            forName: .AVPlayerItemDidPlayToEndTime,
-            object: playerItem,
-            queue: .main
-        ) { [weak self] _ in
+    private func setupPreviewPlayer() {
+        previewPlayer.onPlaybackEnded = { [weak self] in
             guard let self else { return }
-            Task {
-                try? await self.skipToNextEntry()
-            }
-        }
-    }
-
-    /// 미리듣기 플레이어를 정지하고 정리합니다.
-    private func stopPreviewPlayer() {
-        previewPlayer?.pause()
-        previewPlayer = nil
-        if let observer = previewEndObserver {
-            NotificationCenter.default.removeObserver(observer)
-            previewEndObserver = nil
+            Task { try? await self.skipToNextEntry() }
         }
     }
 
@@ -424,7 +395,7 @@ final class MusicService {
 
         center.playCommand.addTarget { [weak self] _ in
             guard let self, self.isPreviewMode else { return .commandFailed }
-            self.previewPlayer?.play()
+            self.previewPlayer.resume()
             self.isPlaying.accept(true)
             self.startProgressTimer()
             self.updateNowPlayingPlaybackInfo()
@@ -433,7 +404,7 @@ final class MusicService {
 
         center.pauseCommand.addTarget { [weak self] _ in
             guard let self, self.isPreviewMode else { return .commandFailed }
-            self.previewPlayer?.pause()
+            self.previewPlayer.pause()
             self.isPlaying.accept(false)
             self.stopProgressTimer()
             self.updateNowPlayingPlaybackInfo()
@@ -458,7 +429,7 @@ final class MusicService {
             MPMediaItemPropertyTitle: music.title,
             MPMediaItemPropertyArtist: music.artist,
             MPMediaItemPropertyPlaybackDuration: Double(music.totalDurationMs) / 1000.0,
-            MPNowPlayingInfoPropertyElapsedPlaybackTime: previewPlayer?.currentTime().seconds ?? 0,
+            MPNowPlayingInfoPropertyElapsedPlaybackTime: previewPlayer.currentTime,
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying.value ? 1.0 : 0.0
         ]
 
@@ -476,7 +447,7 @@ final class MusicService {
 
     private func updateNowPlayingPlaybackInfo() {
         guard var info = MPNowPlayingInfoCenter.default().nowPlayingInfo else { return }
-        info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = previewPlayer?.currentTime().seconds ?? 0
+        info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = previewPlayer.currentTime
         info[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying.value ? 1.0 : 0.0
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
     }
@@ -488,8 +459,7 @@ final class MusicService {
         progressTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             if self.isPreviewMode {
-                let time = self.previewPlayer?.currentTime().seconds ?? 0
-                self.playbackTime.accept(time.isNaN ? 0 : time)
+                self.playbackTime.accept(self.previewPlayer.currentTime)
             } else {
                 self.playbackTime.accept(self.player.playbackTime)
             }
