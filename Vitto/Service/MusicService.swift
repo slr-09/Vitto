@@ -7,7 +7,6 @@
 
 import UIKit
 import MusicKit
-import MediaPlayer
 import AVFoundation
 import RxSwift
 import RxCocoa
@@ -168,7 +167,7 @@ final class MusicService {
                 // 비구독자: AVPlayer로 미리듣기 재생
                 isPreviewMode = true
                 previewPlayer.play(for: filteredMusics[adjustedIndex])
-                updateNowPlayingInfo(for: filteredMusics[adjustedIndex])
+                previewPlayer.updateNowPlayingInfo(for: filteredMusics[adjustedIndex], isPlaying: true)
             }
 
             queue.accept(filteredMusics)
@@ -284,7 +283,7 @@ final class MusicService {
                 // 비구독자: 미리듣기 재생
                 isPreviewMode = true
                 previewPlayer.play(for: playingMusic)
-                updateNowPlayingInfo(for: playingMusic)
+                previewPlayer.updateNowPlayingInfo(for: playingMusic, isPlaying: true)
             }
 
             queue.accept([playingMusic])
@@ -347,7 +346,7 @@ final class MusicService {
 
         if isPreviewMode {
             previewPlayer.play(for: currentQueue[nextIndex])
-            updateNowPlayingInfo(for: currentQueue[nextIndex])
+            previewPlayer.updateNowPlayingInfo(for: currentQueue[nextIndex], isPlaying: true)
         } else {
             try await player.skipToNextEntry()
         }
@@ -365,7 +364,7 @@ final class MusicService {
 
         if isPreviewMode {
             previewPlayer.play(for: currentQueue[prevIndex])
-            updateNowPlayingInfo(for: currentQueue[prevIndex])
+            previewPlayer.updateNowPlayingInfo(for: currentQueue[prevIndex], isPlaying: true)
         } else {
             try await player.skipToPreviousEntry()
         }
@@ -393,12 +392,12 @@ final class MusicService {
                     owner.previewPlayer.resume()
                     owner.isPlaying.accept(true)
                     owner.startProgressTimer()
-                    owner.updateNowPlayingPlaybackInfo()
+                    owner.previewPlayer.updateNowPlayingPlaybackState(isPlaying: owner.isPlaying.value)
                 case .pause:
                     owner.previewPlayer.pause()
                     owner.isPlaying.accept(false)
                     owner.stopProgressTimer()
-                    owner.updateNowPlayingPlaybackInfo()
+                    owner.previewPlayer.updateNowPlayingPlaybackState(isPlaying: owner.isPlaying.value)
                 case .next:
                     Task { try? await owner.skipToNextEntry() }
                 case .previous:
@@ -408,33 +407,6 @@ final class MusicService {
             .disposed(by: disposeBag)
     }
 
-    private func updateNowPlayingInfo(for music: Music) {
-        var info: [String: Any] = [
-            MPMediaItemPropertyTitle: music.title,
-            MPMediaItemPropertyArtist: music.artist,
-            MPMediaItemPropertyPlaybackDuration: Double(music.totalDurationMs) / 1000.0,
-            MPNowPlayingInfoPropertyElapsedPlaybackTime: previewPlayer.currentTime,
-            MPNowPlayingInfoPropertyPlaybackRate: isPlaying.value ? 1.0 : 0.0
-        ]
-
-        if let url = URL(string: music.artworkUrl) {
-            URLSession.shared.dataTask(with: url) { data, _, _ in
-                guard let data, let image = UIImage(data: data) else { return }
-                let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
-                info[MPMediaItemPropertyArtwork] = artwork
-                MPNowPlayingInfoCenter.default().nowPlayingInfo = info
-            }.resume()
-        } else {
-            MPNowPlayingInfoCenter.default().nowPlayingInfo = info
-        }
-    }
-
-    private func updateNowPlayingPlaybackInfo() {
-        guard var info = MPNowPlayingInfoCenter.default().nowPlayingInfo else { return }
-        info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = previewPlayer.currentTime
-        info[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying.value ? 1.0 : 0.0
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
-    }
 
     // MARK: - Progress Timer
 

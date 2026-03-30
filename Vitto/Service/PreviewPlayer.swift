@@ -5,6 +5,7 @@
 //  Created by 가은 on 3/30/26.
 //
 
+import UIKit
 import AVFoundation
 import MediaPlayer
 import RxCocoa
@@ -102,5 +103,35 @@ final class PreviewPlayer {
             self?.remoteCommand.accept(.previous)
             return .success
         }
+    }
+
+    // MARK: - Now Playing Info (제어센터 곡 정보)
+
+    func updateNowPlayingInfo(for music: Music, isPlaying: Bool) {
+        var info: [String: Any] = [
+            MPMediaItemPropertyTitle: music.title,
+            MPMediaItemPropertyArtist: music.artist,
+            MPMediaItemPropertyPlaybackDuration: Double(music.totalDurationMs) / 1000.0,
+            MPNowPlayingInfoPropertyElapsedPlaybackTime: currentTime,
+            MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0
+        ]
+
+        if let url = URL(string: music.artworkUrl) {
+            URLSession.shared.dataTask(with: url) { data, _, _ in
+                guard let data, let image = UIImage(data: data) else { return }
+                let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+                info[MPMediaItemPropertyArtwork] = artwork
+                MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+            }.resume()
+        } else {
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+        }
+    }
+
+    func updateNowPlayingPlaybackState(isPlaying: Bool) {
+        guard var info = MPNowPlayingInfoCenter.default().nowPlayingInfo else { return }
+        info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
+        info[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
     }
 }
