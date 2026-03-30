@@ -9,14 +9,14 @@ final class SearchViewModel: ViewModelType {
         let viewDidLoad: Observable<Void>
         let searchButtonClicked: Observable<String>
         let itemSelected: Observable<Music>
-        let genreSelected: Observable<String>
+        let genreSelected: Observable<GenreInfo>
         let searchBarFocused: Observable<Void>
         let recentSearchSelected: Observable<String>
         let recentSearchDeleted: Observable<String>
     }
 
     struct Output {
-        let genres: Driver<[String]>
+        let genres: Driver<[GenreInfo]>
         let displayResults: Driver<[Music]>
         let recentSearches: Driver<[String]>
     }
@@ -34,14 +34,14 @@ final class SearchViewModel: ViewModelType {
         // 장르 조회: 캐시된 장르에서 랜덤 4개 선택
         let genres = input.viewDidLoad
             .flatMapLatest {
-                GenreCacheService.shared.cachedGenreNames()
+                GenreCacheService.shared.cachedGenres()
                     .catch { error in
                         print("장르 조회 에러: \(error)")
                         return .just([])
                     }
             }
-            .map { allGenreNames in
-                Array(allGenreNames.shuffled().prefix(4))
+            .map { allGenres in
+                Array(allGenres.shuffled().prefix(4))
             }
             .asDriver(onErrorJustReturn: [])
 
@@ -68,10 +68,10 @@ final class SearchViewModel: ViewModelType {
                     }
             }
 
-        // 장르 선택 → 장르명으로 검색
+        // 장르 선택 → 장르 ID로 차트 검색
         let genreResults = input.genreSelected
             .flatMapLatest { genre in
-                MusicSearchService.shared.searchSongs(byGenreName: genre)
+                MusicSearchService.shared.searchSongs(byGenreID: genre.id)
                     .catch { error in
                         print("장르 검색 에러: \(error)")
                         return .just([])

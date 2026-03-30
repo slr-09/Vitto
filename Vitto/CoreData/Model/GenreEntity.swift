@@ -1,4 +1,5 @@
 import CoreData
+import MusicKit
 
 class GenreEntity: NSManagedObject {
     @NSManaged var genreID: String?
@@ -11,6 +12,11 @@ class GenreEntity: NSManagedObject {
 extension GenreEntity {
 
     /// 장르명으로 기존 엔티티를 찾거나 없으면 새로 생성
+    func toGenreInfo() -> GenreInfo? {
+        guard let id = genreID, let name = name else { return nil }
+        return GenreInfo(id: MusicItemID(id), name: name)
+    }
+
     static func findOrCreate(
         name: String,
         in context: NSManagedObjectContext

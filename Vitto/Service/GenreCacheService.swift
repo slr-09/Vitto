@@ -15,17 +15,17 @@ final class GenreCacheService {
 
     // MARK: - Public
 
-    /// 캐시된 장르명 목록을 반환. 캐시가 없거나 만료되면 API에서 새로 가져옴
-    func cachedGenreNames() -> Observable<[String]> {
+    /// 캐시된 장르 목록을 반환. 캐시가 없거나 만료되면 API에서 새로 가져옴
+    func cachedGenres() -> Observable<[GenreInfo]> {
         let cached = fetchCachedGenres()
 
         if !cached.isEmpty, isCacheValid(cached) {
-            return .just(cached.compactMap { $0.name })
+            return .just(cached.compactMap { $0.toGenreInfo() })
         }
 
         return refreshGenres()
             .map { [weak self] _ in
-                self?.fetchCachedGenres().compactMap { $0.name } ?? []
+                self?.fetchCachedGenres().compactMap { $0.toGenreInfo() } ?? []
             }
     }
 

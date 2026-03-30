@@ -24,20 +24,6 @@ final class MusicSearchService {
         }
     }
 
-    /// 장르명으로 노래를 검색합니다.
-    func searchSongs(byGenreName name: String) -> Observable<[Music]> {
-        return .async {
-            var request = MusicCatalogSearchRequest(term: name, types: [Song.self])
-            request.limit = 30
-            let response = try await request.response()
-
-            let songs = response.songs.map { $0.toMusic() }
-
-            print("[MusicSearchService] 장르명 검색 완료: \(name) → \(songs.count)곡")
-            return songs
-        }
-    }
-    
     /// 장르 ID로 인기곡 차트를 가져옵니다.
     func searchSongs(byGenreID genreID: MusicItemID) -> Observable<[Music]> {
         return .async {
@@ -52,7 +38,7 @@ final class MusicSearchService {
                 return []
             }
 
-            var chartRequest = MusicCatalogChartsRequest(genre: genre, types: [])
+            var chartRequest = MusicCatalogChartsRequest(genre: genre, types: [Song.self])
             chartRequest.limit = 20
             let chartResponse = try await chartRequest.response()
 

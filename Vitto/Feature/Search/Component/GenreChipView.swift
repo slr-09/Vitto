@@ -27,7 +27,10 @@ final class GenreChipView: UIButton {
         )
     }
 
-    func configure(name: String) {
-        setTitle(name, for: .normal)
+    private(set) var genre: GenreInfo?
+
+    func configure(genre: GenreInfo) {
+        self.genre = genre
+        setTitle(genre.name, for: .normal)
     }
 }

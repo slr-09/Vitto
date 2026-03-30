@@ -29,7 +29,7 @@ final class SearchViewController: BaseViewController {
 
         let genreSelected = Observable.merge(
             searchView.genreChipViews.map { chip in
-                chip.rx.tap.map { chip.titleLabel?.text ?? "" }
+                chip.rx.tap.compactMap { chip.genre }
             }
         )
 
@@ -70,8 +70,8 @@ final class SearchViewController: BaseViewController {
         // 장르 버튼 바인딩
         output.genres
             .drive(with: self) { owner, genres in
-                zip(owner.searchView.genreChipViews, genres).forEach { chip, name in
-                    chip.configure(name: name)
+                zip(owner.searchView.genreChipViews, genres).forEach { chip, genre in
+                    chip.configure(genre: genre)
                 }
                 for i in genres.count..<owner.searchView.genreChipViews.count {
                     owner.searchView.genreChipViews[i].isHidden = true
