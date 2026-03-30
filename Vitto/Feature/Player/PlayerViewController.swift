@@ -89,7 +89,7 @@ final class PlayerViewController: UIViewController {
     // MARK: - Subscribe Banner
 
     private func setupSubscribeBanner() {
-        playerView.setSubscribed(MusicService.shared.isSubscribed)
+        playerView.setSubscribed(MusicAuthService.shared.isSubscribed)
 
         playerView.subscribeBannerButton.rx.tap
             .bind(with: self) { owner, _ in

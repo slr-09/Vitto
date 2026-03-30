@@ -26,7 +26,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     // MARK: - Apple Music 구독 체크
 
     private func checkAppleMusicSubscription() {
-        MusicService.shared.checkSubscriptionStatus()
+        MusicAuthService.shared.checkSubscriptionStatus()
             .observe(on: MainScheduler.instance)
             .subscribe(
                 onNext: { isSubscribed in

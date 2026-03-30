@@ -37,8 +37,7 @@ final class MusicService {
         setupAudioSession()
     }
 
-    /// 현재 구독 상태를 앱 전역에서 참조할 수 있도록 저장
-    private(set) var isSubscribed: Bool = false
+    private let authService = MusicAuthService.shared
 
     private let player = ApplicationMusicPlayer.shared
 
@@ -132,7 +131,7 @@ final class MusicService {
                 if let song = songMap[music.musicID] {
                     var m = music
                     m.previewUrl = song.previewAssets?.first?.url?.absoluteString
-                    if !self.isSubscribed, let urlString = m.previewUrl, let url = URL(string: urlString) {
+                    if !authService.isSubscribed, let urlString = m.previewUrl, let url = URL(string: urlString) {
                         let asset = AVURLAsset(url: url)
                         let duration = try await asset.load(.duration)
                         m.totalDurationMs = Int(duration.seconds * 1000)
@@ -149,7 +148,7 @@ final class MusicService {
                 throw MusicServiceError.songNotFound
             }
 
-            if isSubscribed {
+            if authService.isSubscribed {
                 // 구독자: ApplicationMusicPlayer로 전체 재생
                 stopPreviewPlayer()
                 isPreviewMode = false
@@ -255,7 +254,7 @@ final class MusicService {
 
             let previewUrl = song.previewAssets?.first?.url
             var previewDurationMs: Int?
-            if !self.isSubscribed, let previewUrl {
+            if !self.authService.isSubscribed, let previewUrl {
                 let asset = AVURLAsset(url: previewUrl)
                 let duration = try await asset.load(.duration)
                 previewDurationMs = Int(duration.seconds * 1000)
@@ -266,7 +265,7 @@ final class MusicService {
                 playingMusic.totalDurationMs = previewDurationMs
             }
 
-            if isSubscribed {
+            if authService.isSubscribed {
                 // 구독자: 전체 재생
                 stopPreviewPlayer()
                 isPreviewMode = false
@@ -592,32 +591,6 @@ final class MusicService {
         }
     }
 
-    // MARK: - 권한 요청 + 구독 상태 확인
-
-    /// MusicKit 권한을 요청하고, Apple Music 구독 상태를 확인합니다.
-    func checkSubscriptionStatus() -> Observable<Bool> {
-        return .async { [self] in
-            let status = await MusicAuthorization.request()
-
-            guard status == .authorized else {
-                print("[MusicService] 권한 거부됨: \(status)")
-                isSubscribed = false
-                return false
-            }
-
-            let subscription = try await MusicSubscription.current
-            let canPlay = subscription.canPlayCatalogContent
-
-            isSubscribed = canPlay
-
-            print("[MusicService] 구독 상태 확인 완료")
-            print("  - canPlayCatalogContent: \(subscription.canPlayCatalogContent)")
-            print("  - hasCloudLibraryEnabled: \(subscription.hasCloudLibraryEnabled)")
-            print("  - canBecomeSubscriber: \(subscription.canBecomeSubscriber)")
-
-            return canPlay
-        }
-    }
 }
 
 // MARK: - Song → Music 변환
