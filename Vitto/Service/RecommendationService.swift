@@ -5,7 +5,7 @@ final class RecommendationService {
     static let shared = RecommendationService()
 
     private let recordService = PlaybackRecordService.shared
-    private let musicService = MusicService.shared
+    private let musicSearchService = MusicSearchService.shared
     private init() {}
 
     /// 현재 시간대 기반 추천 곡 목록
@@ -21,7 +21,7 @@ final class RecommendationService {
 
                 if !songs.isEmpty { return .just(songs) }
 
-                return self.musicService
+                return self.musicSearchService
                     .searchCuratedPlaylistTracks(query: period.searchKeyword, limit: limit)
             }
     }
@@ -37,7 +37,7 @@ final class RecommendationService {
 
                 if songs.count >= 7 { return .just(songs) }
 
-                return self.musicService
+                return self.musicSearchService
                     .searchCuratedPlaylistTracks(query: weather.searchKeyword, limit: limit)
             }
     }

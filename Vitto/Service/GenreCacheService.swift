@@ -8,7 +8,7 @@ final class GenreCacheService {
     private init() {}
 
     private let stack = CoreDataStack.shared
-    private let musicService = MusicService.shared
+    private let musicSearchService = MusicSearchService.shared
 
     /// 캐시 유효 기간 (7일)
     private let cacheTTL: TimeInterval = 7 * 24 * 60 * 60
@@ -31,7 +31,7 @@ final class GenreCacheService {
 
     /// Apple Music API에서 장르 목록을 가져와 CoreData에 저장
     func refreshGenres() -> Observable<Void> {
-        musicService.fetchGenres()
+        musicSearchService.fetchGenres()
             .map { [weak self] genres in
                 self?.saveGenres(genres)
             }

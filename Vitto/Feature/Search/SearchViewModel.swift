@@ -61,7 +61,7 @@ final class SearchViewModel: ViewModelType {
         let searchResults = searchQuery
             .filter { !$0.isEmpty }
             .flatMapLatest { query in
-                MusicService.shared.searchMusic(query: query)
+                MusicSearchService.shared.searchMusic(query: query)
                     .catch { error in
                         print("검색 에러: \(error)")
                         return .just([])
@@ -71,7 +71,7 @@ final class SearchViewModel: ViewModelType {
         // 장르 선택 → 장르명으로 검색
         let genreResults = input.genreSelected
             .flatMapLatest { genre in
-                MusicService.shared.searchSongs(byGenreName: genre)
+                MusicSearchService.shared.searchSongs(byGenreName: genre)
                     .catch { error in
                         print("장르 검색 에러: \(error)")
                         return .just([])
