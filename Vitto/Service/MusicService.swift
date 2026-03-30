@@ -261,17 +261,10 @@ final class MusicService {
                 previewDurationMs = Int(duration.seconds * 1000)
             }
 
-            let playingMusic = Music(
-                musicID: song.id.rawValue,
-                title: song.title,
-                artist: song.artistName,
-                totalDurationMs: previewDurationMs ?? Int((song.duration ?? 0) * 1000),
-                isrc: song.isrc ?? "",
-                albumTitle: song.albumTitle ?? "",
-                artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
-                genres: song.genreNames,
-                previewUrl: previewUrl?.absoluteString
-            )
+            var playingMusic = song.toMusic()
+            if let previewDurationMs {
+                playingMusic.totalDurationMs = previewDurationMs
+            }
 
             if isSubscribed {
                 // 구독자: 전체 재생
@@ -517,19 +510,7 @@ final class MusicService {
             request.limit = 20
             let response = try await request.response()
 
-            return response.songs.map { song in
-                Music(
-                    musicID: song.id.rawValue,
-                    title: song.title,
-                    artist: song.artistName,
-                    totalDurationMs: Int((song.duration ?? 0) * 1000),
-                    isrc: song.isrc ?? "",
-                    albumTitle: song.albumTitle ?? "",
-                    artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
-                    genres: song.genreNames,
-                    previewUrl: song.previewAssets?.first?.url?.absoluteString
-                )
-            }
+            return response.songs.map { $0.toMusic() }
         }
     }
 
@@ -548,17 +529,7 @@ final class MusicService {
 
             return tracks.prefix(limit).compactMap { track -> Music? in
                 guard case let .song(song) = track else { return nil }
-                return Music(
-                    musicID: song.id.rawValue,
-                    title: song.title,
-                    artist: song.artistName,
-                    totalDurationMs: Int((song.duration ?? 0) * 1000),
-                    isrc: song.isrc ?? "",
-                    albumTitle: song.albumTitle ?? "",
-                    artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
-                    genres: song.genreNames,
-                    previewUrl: song.previewAssets?.first?.url?.absoluteString
-                )
+                return song.toMusic()
             }
         }
     }
@@ -589,19 +560,7 @@ final class MusicService {
             request.limit = 20
             let response = try await request.response()
 
-            let songs = response.songs.map { song in
-                Music(
-                    musicID: song.id.rawValue,
-                    title: song.title,
-                    artist: song.artistName,
-                    totalDurationMs: Int((song.duration ?? 0) * 1000),
-                    isrc: song.isrc ?? "",
-                    albumTitle: song.albumTitle ?? "",
-                    artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
-                    genres: song.genreNames,
-                    previewUrl: song.previewAssets?.first?.url?.absoluteString
-                )
-            }
+            let songs = response.songs.map { $0.toMusic() }
 
             print("[MusicService] 장르명 검색 완료: \(name) → \(songs.count)곡")
             return songs
@@ -626,19 +585,7 @@ final class MusicService {
             chartRequest.limit = 20
             let chartResponse = try await chartRequest.response()
 
-            let songs = (chartResponse.songCharts.first?.items ?? []).map { song in
-                Music(
-                    musicID: song.id.rawValue,
-                    title: song.title,
-                    artist: song.artistName,
-                    totalDurationMs: Int((song.duration ?? 0) * 1000),
-                    isrc: song.isrc ?? "",
-                    albumTitle: song.albumTitle ?? "",
-                    artworkUrl: song.artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
-                    genres: song.genreNames,
-                    previewUrl: song.previewAssets?.first?.url?.absoluteString
-                )
-            }
+            let songs = (chartResponse.songCharts.first?.items ?? []).map { $0.toMusic() }
 
             print("[MusicService] 장르 ID 차트 조회 완료: \(genre.name) → \(songs.count)곡")
             return songs
@@ -670,5 +617,23 @@ final class MusicService {
 
             return canPlay
         }
+    }
+}
+
+// MARK: - Song → Music 변환
+
+extension Song {
+    func toMusic() -> Music {
+        Music(
+            musicID: id.rawValue,
+            title: title,
+            artist: artistName,
+            totalDurationMs: Int((duration ?? 0) * 1000),
+            isrc: isrc ?? "",
+            albumTitle: albumTitle ?? "",
+            artworkUrl: artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
+            genres: genreNames,
+            previewUrl: previewAssets?.first?.url?.absoluteString
+        )
     }
 }
