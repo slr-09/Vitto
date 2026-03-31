@@ -9,6 +9,12 @@ struct WeatherSnapshot {
     let mood: WeatherCategory         // WeatherCondition에서 파생된 WeatherCategory
 }
 
+/// Apple Weather 출처 표기 정보
+struct WeatherAttributionInfo {
+    let logoURL: URL
+    let legalPageURL: URL
+}
+
 final class WeatherService {
     
     static let shared = WeatherService()
@@ -39,6 +45,17 @@ final class WeatherService {
             }
     }
     
+    /// Apple Weather 출처 표기 정보 조회
+    func fetchAttribution() -> Observable<WeatherAttributionInfo> {
+        Observable.async {
+            let attribution = try await WeatherKit.WeatherService.shared.attribution
+            return WeatherAttributionInfo(
+                logoURL: attribution.combinedMarkDarkURL,
+                legalPageURL: attribution.legalPageURL
+            )
+        }
+    }
+
     // MARK: - Private
     
     /// WeatherCondition enum → WeatherCategory 매핑

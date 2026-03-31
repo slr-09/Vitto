@@ -49,6 +49,13 @@ final class HomeViewController: BaseViewController {
             })
             .disposed(by: disposeBag)
 
+        output.weatherAttribution
+            .compactMap { $0 }
+            .drive(onNext: { [weak self] attribution in
+                self?.homeView.heroSectionView.configureAttribution(attribution)
+            })
+            .disposed(by: disposeBag)
+
         homeView.heroSectionView.tapEvent
             .withLatestFrom(output.heroMood)
             .bind(with: self) { owner, weather in

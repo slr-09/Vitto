@@ -14,10 +14,12 @@ final class HomeViewModel: ViewModelType {
         let recommendedSectionTitle: Driver<String>
         let heroMood: Driver<WeatherCategory>
         let heroMoodSongs: Driver<[Music]>
+        let weatherAttribution: Driver<WeatherAttributionInfo?>
     }
 
     private let disposeBag = DisposeBag()
     private let recommendationService = RecommendationService.shared
+    private let weatherService = WeatherService.shared
 
     func transform(input: Input) -> Output {
         let period = TimePeriod.current
@@ -49,11 +51,21 @@ final class HomeViewModel: ViewModelType {
             .map { period.sectionTitle }
             .asDriver(onErrorJustReturn: "Recommended for You")
 
+        let attribution = input.viewDidLoad
+            .flatMapLatest { [weak self] _ -> Observable<WeatherAttributionInfo?> in
+                guard let self else { return .just(nil) }
+                return self.weatherService.fetchAttribution()
+                    .map { $0 as WeatherAttributionInfo? }
+                    .catchAndReturn(nil)
+            }
+            .asDriver(onErrorJustReturn: nil)
+
         return Output(
             recommendedItems: recommended,
             recommendedSectionTitle: sectionTitle,
             heroMood: mood,
-            heroMoodSongs: heroSongs
+            heroMoodSongs: heroSongs,
+            weatherAttribution: attribution
         )
     }
 }
