@@ -15,6 +15,7 @@ final class HomeViewModel: ViewModelType {
         let heroMood: Driver<WeatherCategory>
         let heroMoodSongs: Driver<[Music]>
         let weatherAttribution: Driver<WeatherAttributionInfo?>
+        let topSongs: Driver<[Music]>
     }
 
     private let disposeBag = DisposeBag()
@@ -60,12 +61,20 @@ final class HomeViewModel: ViewModelType {
             }
             .asDriver(onErrorJustReturn: nil)
 
+        let topSongs = input.viewDidLoad
+            .flatMapLatest {
+                MusicSearchService.shared.fetchTopCharts(limit: 100)
+                    .catchAndReturn([])
+            }
+            .asDriver(onErrorJustReturn: [])
+
         return Output(
             recommendedItems: recommended,
             recommendedSectionTitle: sectionTitle,
             heroMood: mood,
             heroMoodSongs: heroSongs,
-            weatherAttribution: attribution
+            weatherAttribution: attribution,
+            topSongs: topSongs
         )
     }
 }

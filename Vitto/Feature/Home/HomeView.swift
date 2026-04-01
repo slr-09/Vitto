@@ -16,6 +16,16 @@ final class HomeView: BaseView {
     private let recommendedHeader = SectionHeaderView()
     lazy var recommendedCollectionView = makeHorizontalCollectionView(itemSize: CGSize(width: 140, height: 185))
 
+    let top100Header = SectionHeaderView()
+    let top100PreviewTableView: SelfSizingTableView = {
+        let tv = SelfSizingTableView()
+        tv.backgroundColor = .clear
+        tv.separatorStyle = .none
+        tv.isScrollEnabled = false
+        tv.register(SearchResultCell.self, forCellReuseIdentifier: SearchResultCell.identifier)
+        return tv
+    }()
+
     private func makeHorizontalCollectionView(itemSize: CGSize) -> UICollectionView {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
@@ -34,8 +44,9 @@ final class HomeView: BaseView {
         scrollView.addSubview(contentStack)
 
         let recommendedSection = makeSectionContainer(header: recommendedHeader, collection: recommendedCollectionView)
+        let top100Section = makeTop100SectionContainer()
 
-        [heroSectionView, recommendedSection].forEach { contentStack.addArrangedSubview($0) }
+        [heroSectionView, recommendedSection, top100Section].forEach { contentStack.addArrangedSubview($0) }
     }
 
     override func setupConstraints() {
@@ -54,7 +65,8 @@ final class HomeView: BaseView {
     }
 
     override func setupStyles() {
-        recommendedHeader.configure(title: "Recommended for You")
+        recommendedHeader.configure(title: "Recommended for You", showMore: false)
+        top100Header.configure(title: "실시간 Top 100")
         scrollView.contentInsetAdjustmentBehavior = .never
         scrollView.showsVerticalScrollIndicator = false
         
@@ -64,6 +76,20 @@ final class HomeView: BaseView {
         super.safeAreaInsetsDidChange()
         scrollView.contentInset.bottom = safeAreaInsets.bottom
         scrollView.verticalScrollIndicatorInsets.bottom = safeAreaInsets.bottom
+    }
+
+    private func makeTop100SectionContainer() -> UIView {
+        let container = UIView()
+        [top100Header, top100PreviewTableView].forEach { container.addSubview($0) }
+        top100Header.snp.makeConstraints {
+            $0.top.equalToSuperview()
+            $0.horizontalEdges.equalToSuperview().inset(AppSpacing.screenHorizontal)
+        }
+        top100PreviewTableView.snp.makeConstraints {
+            $0.top.equalTo(top100Header.snp.bottom).offset(AppSpacing.sm)
+            $0.horizontalEdges.bottom.equalToSuperview()
+        }
+        return container
     }
 
     private func makeSectionContainer(header: SectionHeaderView, collection: UICollectionView) -> UIView {

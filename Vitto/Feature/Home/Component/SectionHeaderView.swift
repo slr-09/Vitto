@@ -12,7 +12,7 @@ final class SectionHeaderView: UIView {
 
     let moreButton: UIButton = {
         var config = UIButton.Configuration.plain()
-//        config.title = "See All"
+        config.title = "전체보기"
         config.baseForegroundColor = AppColor.secondary
         config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
             var a = attrs
@@ -40,6 +40,7 @@ final class SectionHeaderView: UIView {
     private func setupConstraints() {
         titleLabel.snp.makeConstraints {
             $0.leading.centerY.equalToSuperview()
+            $0.verticalEdges.equalToSuperview().inset(5)
         }
         moreButton.snp.makeConstraints {
             $0.trailing.centerY.equalToSuperview()
