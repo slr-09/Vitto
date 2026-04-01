@@ -12,6 +12,15 @@ import Kingfisher
 final class SearchResultCell: BaseTableViewCell {
 
     // MARK: - UI Components
+    private let rankLabel: UILabel = {
+        let label = UILabel()
+        label.font = AppFont.h4
+        label.textColor = AppColor.onSurfaceVariant
+        label.textAlignment = .center
+        label.isHidden = true
+        return label
+    }()
+
     private let artworkImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFill
@@ -55,8 +64,11 @@ final class SearchResultCell: BaseTableViewCell {
     var onMoreButtonTapped: (() -> Void)?
 
     // MARK: - Setup
+    private var artworkLeadingToSuperview: Constraint?
+    private var artworkLeadingToRank: Constraint?
+
     override func setupHierarchy() {
-        [artworkImageView, titleLabel, artistLabel, durationLabel, moreButton].forEach {
+        [rankLabel, artworkImageView, titleLabel, artistLabel, durationLabel, moreButton].forEach {
             contentView.addSubview($0)
         }
         moreButton.addTarget(self, action: #selector(moreButtonDidTap), for: .touchUpInside)
@@ -67,11 +79,19 @@ final class SearchResultCell: BaseTableViewCell {
     }
 
     override func setupConstraints() {
-        artworkImageView.snp.makeConstraints {
+        rankLabel.snp.makeConstraints {
             $0.leading.equalToSuperview().inset(AppSpacing.screenHorizontal)
+            $0.centerY.equalTo(artworkImageView)
+            $0.width.equalTo(28)
+        }
+
+        artworkImageView.snp.makeConstraints {
+            artworkLeadingToSuperview = $0.leading.equalToSuperview().inset(AppSpacing.screenHorizontal).constraint
+            artworkLeadingToRank = $0.leading.equalTo(rankLabel.snp.trailing).offset(AppSpacing.sm).constraint
             $0.verticalEdges.equalToSuperview().inset(AppSpacing.sm)
             $0.size.equalTo(48)
         }
+        artworkLeadingToRank?.deactivate()
 
         moreButton.snp.makeConstraints {
             $0.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
@@ -117,10 +137,19 @@ final class SearchResultCell: BaseTableViewCell {
         artworkImageView.kf.cancelDownloadTask()
         artworkImageView.image = nil
         onMoreButtonTapped = nil
+        rankLabel.isHidden = true
+        artworkLeadingToRank?.deactivate()
+        artworkLeadingToSuperview?.activate()
     }
 
     // MARK: - Configure
-    func configure(with music: Music) {
+    func configure(with music: Music, rank: Int? = nil) {
+        if let rank {
+            rankLabel.text = "\(rank)"
+            rankLabel.isHidden = false
+            artworkLeadingToSuperview?.deactivate()
+            artworkLeadingToRank?.activate()
+        }
         titleLabel.text = music.title
         artistLabel.text = music.artist
         durationLabel.text = music.durationFormatted
