@@ -69,6 +69,19 @@ final class MusicSearchService {
         }
     }
 
+    /// Apple Music 글로벌 인기 차트를 가져옵니다.
+    func fetchTopCharts(limit: Int = 100) -> Observable<[Music]> {
+        return .async {
+            var request = MusicCatalogChartsRequest(types: [Song.self])
+            request.limit = limit
+            let response = try await request.response()
+
+            let songs = (response.songCharts.first?.items ?? []).map { $0.toMusic() }
+            print("[MusicSearchService] Top Charts 조회 완료: \(songs.count)곡")
+            return songs
+        }
+    }
+
     /// Apple Music 카탈로그에서 전체 장르 목록을 가져옵니다.
     func fetchGenres() -> Observable<[Genre]> {
         return .async {
