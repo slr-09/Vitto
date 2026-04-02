@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		231113D22F7E8B82003CF8F9 /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 231113D12F7E8B82003CF8F9 /* FirebaseAnalyticsCore */; };
+		231113D42F7E8B82003CF8F9 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 231113D32F7E8B82003CF8F9 /* FirebaseCrashlytics */; };
 		23EF9FD42F6E630000CD87AF /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 23EF9FD32F6E630000CD87AF /* SnapKit */; };
 		23EF9FD72F6E631400CD87AF /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 23EF9FD62F6E631400CD87AF /* RxCocoa */; };
 		23EF9FD92F6E631400CD87AF /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 23EF9FD82F6E631400CD87AF /* RxSwift */; };
@@ -45,6 +47,8 @@
 			files = (
 				23EFA0452F6E9E3000CD87AF /* Kingfisher in Frameworks */,
 				23EF9FD92F6E631400CD87AF /* RxSwift in Frameworks */,
+				231113D22F7E8B82003CF8F9 /* FirebaseAnalyticsCore in Frameworks */,
+				231113D42F7E8B82003CF8F9 /* FirebaseCrashlytics in Frameworks */,
 				23EF9FD72F6E631400CD87AF /* RxCocoa in Frameworks */,
 				23EF9FD42F6E630000CD87AF /* SnapKit in Frameworks */,
 			);
@@ -93,6 +97,8 @@
 				23EF9FD62F6E631400CD87AF /* RxCocoa */,
 				23EF9FD82F6E631400CD87AF /* RxSwift */,
 				23EFA0442F6E9E3000CD87AF /* Kingfisher */,
+				231113D12F7E8B82003CF8F9 /* FirebaseAnalyticsCore */,
+				231113D32F7E8B82003CF8F9 /* FirebaseCrashlytics */,
 			);
 			productName = Vitto;
 			productReference = 23EF9FBA2F6E530D00CD87AF /* Vitto.app */;
@@ -126,6 +132,7 @@
 				23EF9FD22F6E630000CD87AF /* XCRemoteSwiftPackageReference "SnapKit" */,
 				23EF9FD52F6E631400CD87AF /* XCRemoteSwiftPackageReference "RxSwift" */,
 				23EFA0432F6E9E3000CD87AF /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				231113D02F7E8B82003CF8F9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 23EF9FBB2F6E530D00CD87AF /* Products */;
@@ -387,6 +394,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		231113D02F7E8B82003CF8F9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.11.0;
+			};
+		};
 		23EF9FD22F6E630000CD87AF /* XCRemoteSwiftPackageReference "SnapKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
@@ -414,6 +429,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		231113D12F7E8B82003CF8F9 /* FirebaseAnalyticsCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 231113D02F7E8B82003CF8F9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsCore;
+		};
+		231113D32F7E8B82003CF8F9 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 231113D02F7E8B82003CF8F9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
 		23EF9FD32F6E630000CD87AF /* SnapKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 23EF9FD22F6E630000CD87AF /* XCRemoteSwiftPackageReference "SnapKit" */;
