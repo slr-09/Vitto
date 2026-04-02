@@ -94,9 +94,9 @@ final class SearchResultCell: BaseTableViewCell {
         artworkLeadingToRank?.deactivate()
 
         moreButton.snp.makeConstraints {
-            $0.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
+            $0.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal - 10)
             $0.centerY.equalTo(artworkImageView)
-            $0.size.equalTo(24)
+            $0.size.equalTo(44)
         }
 
         durationLabel.snp.makeConstraints {
