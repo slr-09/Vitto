@@ -1,5 +1,7 @@
 import UIKit
 import SnapKit
+import RxSwift
+import RxCocoa
 
 final class RecentSearchCell: BaseTableViewCell {
 
@@ -20,23 +22,33 @@ final class RecentSearchCell: BaseTableViewCell {
         return label
     }()
 
-    let deleteButton: UIButton = {
+    private let deleteButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(UIImage(systemName: "xmark"), for: .normal)
         button.tintColor = AppColor.onSurfaceVariant
         return button
     }()
+    
+    private let disposeBag = DisposeBag()
 
     var onDeleteTapped: (() -> Void)?
-
-    // MARK: - Setup
-    override func setupHierarchy() {
-        [iconImageView, queryLabel, deleteButton].forEach { contentView.addSubview($0) }
-        deleteButton.addTarget(self, action: #selector(deleteDidTap), for: .touchUpInside)
+    
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setupActions()
     }
 
-    @objc private func deleteDidTap() {
-        onDeleteTapped?()
+    // MARK: - Setup
+    private func setupActions() {
+        deleteButton.rx.tap
+            .bind(with: self) { owner, _ in
+                owner.onDeleteTapped?()
+            }
+            .disposed(by: disposeBag)
+    }
+    
+    override func setupHierarchy() {
+        [iconImageView, queryLabel, deleteButton].forEach { contentView.addSubview($0) }
     }
 
     override func setupConstraints() {

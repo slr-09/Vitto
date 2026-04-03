@@ -8,6 +8,8 @@
 import UIKit
 import SnapKit
 import Kingfisher
+import RxSwift
+import RxCocoa
 
 final class SearchResultCell: BaseTableViewCell {
 
@@ -62,20 +64,31 @@ final class SearchResultCell: BaseTableViewCell {
     }()
 
     var onMoreButtonTapped: (() -> Void)?
+    
+    private let disposeBag = DisposeBag()
 
     // MARK: - Setup
     private var artworkLeadingToSuperview: Constraint?
     private var artworkLeadingToRank: Constraint?
+    
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        
+        setupActions()
+    }
+    
+    private func setupActions() {
+        moreButton.rx.tap
+            .bind(with: self) { owner, _ in
+                owner.onMoreButtonTapped?()
+            }
+            .disposed(by: disposeBag)
+    }
 
     override func setupHierarchy() {
         [rankLabel, artworkImageView, titleLabel, artistLabel, durationLabel, moreButton].forEach {
             contentView.addSubview($0)
         }
-        moreButton.addTarget(self, action: #selector(moreButtonDidTap), for: .touchUpInside)
-    }
-
-    @objc private func moreButtonDidTap() {
-        onMoreButtonTapped?()
     }
 
     override func setupConstraints() {
