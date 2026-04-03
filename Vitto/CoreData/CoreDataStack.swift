@@ -42,6 +42,15 @@ final class CoreDataStack {
         }
     }
 
+    /// 카탈로그에서 가져온 실제 duration으로 CoreData의 MusicEntity를 갱신
+    func updateMusicDurations(_ musics: [Music]) {
+        let ctx = context
+        for music in musics {
+            let _ = MusicEntity.findOrCreate(from: music, in: ctx)
+        }
+        saveContext()
+    }
+
     func newBackgroundContext() -> NSManagedObjectContext {
         persistentContainer.newBackgroundContext()
     }

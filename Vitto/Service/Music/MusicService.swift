@@ -129,6 +129,10 @@ final class MusicService {
                 if let song = songMap[music.musicID] {
                     var m = music
                     m.previewUrl = song.previewAssets?.first?.url?.absoluteString
+                    // 카탈로그에서 가져온 실제 duration으로 갱신
+                    if let songDuration = song.duration {
+                        m.totalDurationMs = Int(songDuration * 1000)
+                    }
                     if !authService.isSubscribed, let urlString = m.previewUrl, let url = URL(string: urlString) {
                         let asset = AVURLAsset(url: url)
                         let duration = try await asset.load(.duration)
@@ -138,6 +142,9 @@ final class MusicService {
                     orderedSongs.append(song)
                 }
             }
+
+            // 카탈로그에서 가져온 실제 duration을 CoreData에도 반영
+            CoreDataStack.shared.updateMusicDurations(filteredMusics)
 
             // startIndex 곡이 fetch에 실패했을 수 있으므로 재계산
             guard let adjustedIndex = filteredMusics.firstIndex(where: {

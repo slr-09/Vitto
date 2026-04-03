@@ -28,6 +28,10 @@ extension MusicEntity {
         request.fetchLimit = 1
 
         if let existing = try? context.fetch(request).first {
+            // preview 길이(~30s)로 저장된 경우 실제 길이로 갱신
+            if music.totalDurationMs > existing.totalDurationMs {
+                existing.totalDurationMs = Int32(music.totalDurationMs)
+            }
             return existing
         }
 
