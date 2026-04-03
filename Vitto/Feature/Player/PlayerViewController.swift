@@ -54,6 +54,14 @@ final class PlayerViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
+        // 더보기 버튼
+        playerView.moreButton.rx.tap
+            .compactMap { MusicService.shared.currentMusic.value }
+            .subscribe(with: self) { owner, music in
+                MusicActionSheetPresenter.show(for: music, from: owner, disposeBag: owner.disposeBag)
+            }
+            .disposed(by: disposeBag)
+
         // 음악 정보 → 뷰 업데이트
         output.music
             .drive(with: self) { owner, music in

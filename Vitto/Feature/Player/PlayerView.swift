@@ -41,7 +41,7 @@ final class PlayerView: UIView {
     let moreButton: UIButton = {
         let btn = UIButton(type: .system)
         let cfg = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
-//        btn.setImage(AppIcon.ellipsis.withConfiguration(cfg), for: .normal)
+        btn.setImage(AppIcon.ellipsis.withConfiguration(cfg), for: .normal)
         btn.tintColor = AppColor.onSurface
         return btn
     }()
