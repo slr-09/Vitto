@@ -144,6 +144,10 @@ final class SearchResultCell: BaseTableViewCell {
         }
     }
 
+    func setCurrentlyPlaying(_ isCurrent: Bool) {
+        titleLabel.textColor = isCurrent ? AppColor.secondary : AppColor.onBackground
+    }
+
     // MARK: - Prepare for Reuse
     override func prepareForReuse() {
         super.prepareForReuse()
@@ -151,6 +155,7 @@ final class SearchResultCell: BaseTableViewCell {
         artworkImageView.image = nil
         onMoreButtonTapped = nil
         rankLabel.isHidden = true
+        titleLabel.textColor = AppColor.onBackground
         artworkLeadingToRank?.deactivate()
         artworkLeadingToSuperview?.activate()
     }

@@ -155,11 +155,38 @@ final class PlayerViewController: BaseViewController {
     // MARK: - Current Queue Toggle
 
     private func setupCurrentQueueToggle() {
+        let musicService = MusicService.shared
+
+        // 버튼 탭 → 토글
         playerView.currentQueueButton.rx.tap
             .subscribe(with: self) { owner, _ in
                 let newState = !owner.playerView.isCurrentQueueVisible
                 owner.playerView.setCurrentQueueVisible(newState, animated: true)
                 owner.panGesture?.isEnabled = !newState
+
+                // 큐가 열릴 때 현재 곡으로 스크롤
+                if newState {
+                    let index = musicService.currentIndex.value
+                    guard index < musicService.queue.value.count else { return }
+                    owner.playerView.currentQueueTableView.scrollToRow(
+                        at: IndexPath(row: index, section: 0),
+                        at: .middle,
+                        animated: false
+                    )
+                }
+            }
+            .disposed(by: disposeBag)
+
+        // queue 또는 currentIndex 변경 시 테이블 갱신 (currentIndex도 트리거로 사용)
+        Observable.combineLatest(musicService.queue, musicService.currentIndex)
+            .map { queue, _ in queue }
+            .observe(on: MainScheduler.instance)
+            .bind(to: playerView.currentQueueTableView.rx.items(
+                cellIdentifier: SearchResultCell.identifier,
+                cellType: SearchResultCell.self
+            )) { [weak musicService] index, music, cell in
+                cell.configure(with: music)
+                cell.setCurrentlyPlaying(index == musicService?.currentIndex.value)
             }
             .disposed(by: disposeBag)
     }
