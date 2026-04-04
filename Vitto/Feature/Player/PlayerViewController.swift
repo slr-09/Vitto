@@ -15,7 +15,6 @@ final class PlayerViewController: BaseViewController {
     private let viewModel = PlayerViewModel()
 
     // 슬라이더 상태 추적
-    private let sliderChangedRelay = PublishRelay<Float>()
     private let sliderTouchUpRelay = PublishRelay<Float>()
     private let isSeekingRelay = BehaviorRelay<Bool>(value: false)
 
@@ -44,7 +43,7 @@ final class PlayerViewController: BaseViewController {
             playPauseTap: playerView.playPauseButton.rx.tap.asObservable(),
             skipPrevTap: playerView.prevButton.rx.tap.asObservable(),
             skipNextTap: playerView.nextButton.rx.tap.asObservable(),
-            sliderChanged: sliderChangedRelay.asObservable(),
+            sliderChanged: playerView.slider.rx.value.changed.asObservable(),
             sliderTouchUp: sliderTouchUpRelay.asObservable()
         )
         let output = viewModel.transform(input: input)
@@ -86,8 +85,13 @@ final class PlayerViewController: BaseViewController {
             }
             .disposed(by: disposeBag)
 
-        // 시간 레이블
+        // 시간 레이블 (seek 중이면 seekingTimeText, 아니면 currentTimeText)
         output.currentTimeText
+            .filter { [weak self] _ in !(self?.isSeekingRelay.value ?? false) }
+            .drive(playerView.currentTimeLabel.rx.text)
+            .disposed(by: disposeBag)
+
+        output.seekingTimeText
             .drive(playerView.currentTimeLabel.rx.text)
             .disposed(by: disposeBag)
 
@@ -200,18 +204,6 @@ final class PlayerViewController: BaseViewController {
         slider.rx.controlEvent(.touchDown)
             .subscribe(with: self) { owner, _ in
                 owner.isSeekingRelay.accept(true)
-            }
-            .disposed(by: disposeBag)
-
-        // 값 변경 → relay + 현재 시간 레이블 즉시 업데이트
-        slider.rx.value.changed
-            .subscribe(with: self) { owner, value in
-                owner.sliderChangedRelay.accept(value)
-                guard let totalMs = MusicService.shared.currentMusic.value?.totalDurationMs, totalMs > 0 else { return }
-                let totalSeconds = Double(totalMs) / 1000.0
-                let currentSeconds = Double(value) * totalSeconds
-                let s = Int(currentSeconds)
-                owner.playerView.currentTimeLabel.text = String(format: "%d:%02d", s / 60, s % 60)
             }
             .disposed(by: disposeBag)
 
