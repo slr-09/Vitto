@@ -40,18 +40,18 @@ final class PlayerViewModel {
 
         // 재생/일시정지
         input.playPauseTap
-            .subscribe(onNext: {
+            .bind(with: self) { _, _ in
                 if musicService.isPlaying.value {
                     musicService.pause()
                 } else {
                     Task { try? await musicService.resume() }
                 }
-            })
+            }
             .disposed(by: disposeBag)
 
         // 이전 곡 (5초 이내면 이전 곡, 아니면 처음으로)
         input.skipPrevTap
-            .subscribe(onNext: {
+            .bind(with: self) { _, _ in
                 let current = player.playbackTime
                 if current > 5 {
                     player.playbackTime = 0
@@ -59,26 +59,26 @@ final class PlayerViewModel {
                 } else {
                     Task { try? await musicService.skipToPreviousEntry() }
                 }
-            })
+            }
             .disposed(by: disposeBag)
 
         // 다음 곡
         input.skipNextTap
-            .subscribe(onNext: {
+            .bind(with: self) { _, _ in
                 Task { try? await musicService.skipToNextEntry() }
-            })
+            }
             .disposed(by: disposeBag)
 
         // 슬라이더 터치업 → seek
         input.sliderTouchUp
-            .subscribe(onNext: { value in
+            .bind(with: self) { _, value in
                 guard let totalMs = musicService.currentMusic.value?.totalDurationMs,
                       totalMs > 0 else { return }
                 let totalSeconds = Double(totalMs) / 1000.0
                 let seekTime = Double(value) * totalSeconds
                 player.playbackTime = seekTime
                 musicService.playbackTime.accept(seekTime)
-            })
+            }
             .disposed(by: disposeBag)
 
         // 진행률

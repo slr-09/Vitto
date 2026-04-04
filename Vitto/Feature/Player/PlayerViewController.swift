@@ -27,15 +27,6 @@ final class PlayerViewController: BaseViewController {
         view = playerView
     }
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        setupSliderEvents()
-        setupPanToDismiss()
-        setupSubscribeBanner()
-        setupCurrentQueueToggle()
-    }
-
     // MARK: - Binding
 
     override func bind() {
@@ -50,7 +41,7 @@ final class PlayerViewController: BaseViewController {
 
         // 닫기 버튼
         playerView.closeButton.rx.tap
-            .subscribe(with: self) { owner, _ in
+            .bind(with: self) { owner, _ in
                 owner.dismiss(animated: true)
             }
             .disposed(by: disposeBag)
@@ -58,7 +49,7 @@ final class PlayerViewController: BaseViewController {
         // 더보기 버튼
         playerView.moreButton.rx.tap
             .compactMap { MusicService.shared.currentMusic.value }
-            .subscribe(with: self) { owner, music in
+            .bind(with: self) { owner, music in
                 MusicActionSheetPresenter.show(for: music, from: owner, disposeBag: owner.disposeBag)
             }
             .disposed(by: disposeBag)
@@ -98,6 +89,11 @@ final class PlayerViewController: BaseViewController {
         output.totalTimeText
             .drive(playerView.totalTimeLabel.rx.text)
             .disposed(by: disposeBag)
+
+        setupSliderEvents()
+        setupPanToDismiss()
+        setupSubscribeBanner()
+        setupCurrentQueueToggle()
     }
 
     // MARK: - Subscribe Banner
@@ -124,7 +120,7 @@ final class PlayerViewController: BaseViewController {
         self.panGesture = pan
 
         pan.rx.event
-            .subscribe(with: self) { owner, gesture in
+            .bind(with: self) { owner, gesture in
                 let translation = gesture.translation(in: owner.view)   // 터치해서 얼마나 이동했는지
                 let velocity = gesture.velocity(in: owner.view) // 손가락을 뗀 시점의 속도
                 
@@ -163,7 +159,7 @@ final class PlayerViewController: BaseViewController {
 
         // 버튼 탭 → 토글
         playerView.currentQueueButton.rx.tap
-            .subscribe(with: self) { owner, _ in
+            .bind(with: self) { owner, _ in
                 let newState = !owner.playerView.isCurrentQueueVisible
                 owner.playerView.setCurrentQueueVisible(newState, animated: true)
                 owner.panGesture?.isEnabled = !newState
@@ -202,7 +198,7 @@ final class PlayerViewController: BaseViewController {
 
         // 터치 시작 → isSeeking = true
         slider.rx.controlEvent(.touchDown)
-            .subscribe(with: self) { owner, _ in
+            .bind(with: self) { owner, _ in
                 owner.isSeekingRelay.accept(true)
             }
             .disposed(by: disposeBag)
@@ -210,7 +206,7 @@ final class PlayerViewController: BaseViewController {
         // 터치 종료 → seek 실행, isSeeking = false
         slider.rx.controlEvent([.touchUpInside, .touchUpOutside, .touchCancel])
             .map { slider.value }
-            .subscribe(with: self) { owner, value in
+            .bind(with: self) { owner, value in
                 owner.sliderTouchUpRelay.accept(value)
                 owner.isSeekingRelay.accept(false)
             }
