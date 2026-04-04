@@ -4,40 +4,42 @@
 //
 
 import UIKit
-import SnapKit
 import RxSwift
 import RxCocoa
 import StoreKit
 
-final class PlayerViewController: UIViewController {
+final class PlayerViewController: BaseViewController {
 
     // MARK: - Properties
     private let playerView = PlayerView()
     private let viewModel = PlayerViewModel()
-    private let disposeBag = DisposeBag()
 
     // 슬라이더 상태 추적
     private let sliderChangedRelay = PublishRelay<Float>()
     private let sliderTouchUpRelay = PublishRelay<Float>()
     private let isSeekingRelay = BehaviorRelay<Bool>(value: false)
 
+    // Pan-to-dismiss 제스처 참조
+    private var panGesture: UIPanGestureRecognizer?
+
     // MARK: - Lifecycle
 
     override func loadView() {
         view = playerView
     }
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        bind()
+        
         setupSliderEvents()
         setupPanToDismiss()
         setupSubscribeBanner()
+        setupCurrentQueueToggle()
     }
 
     // MARK: - Binding
 
-    private func bind() {
+    override func bind() {
         let input = PlayerViewModel.Input(
             playPauseTap: playerView.playPauseButton.rx.tap.asObservable(),
             skipPrevTap: playerView.prevButton.rx.tap.asObservable(),
@@ -115,6 +117,7 @@ final class PlayerViewController: UIViewController {
     private func setupPanToDismiss() {
         let pan = UIPanGestureRecognizer()
         view.addGestureRecognizer(pan)
+        self.panGesture = pan
 
         pan.rx.event
             .subscribe(with: self) { owner, gesture in
@@ -145,6 +148,18 @@ final class PlayerViewController: UIViewController {
                 default:
                     break
                 }
+            }
+            .disposed(by: disposeBag)
+    }
+
+    // MARK: - Current Queue Toggle
+
+    private func setupCurrentQueueToggle() {
+        playerView.currentQueueButton.rx.tap
+            .subscribe(with: self) { owner, _ in
+                let newState = !owner.playerView.isCurrentQueueVisible
+                owner.playerView.setCurrentQueueVisible(newState, animated: true)
+                owner.panGesture?.isEnabled = !newState
             }
             .disposed(by: disposeBag)
     }
