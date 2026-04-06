@@ -193,7 +193,7 @@ final class PlayerView: BaseView {
     let playPauseButton: UIButton = {
         let btn = UIButton(type: .system)
         let cfg = UIImage.SymbolConfiguration(pointSize: 52, weight: .bold)
-        btn.setImage(UIImage(systemName: "play.fill", withConfiguration: cfg), for: .normal)
+        btn.setImage(UIImage(systemName: "play.circle.fill", withConfiguration: cfg), for: .normal)
         btn.tintColor = AppColor.primaryRose
         btn.layer.cornerRadius = 40
         btn.clipsToBounds = true
@@ -303,20 +303,8 @@ final class PlayerView: BaseView {
             $0.centerX.equalToSuperview()
         }
 
-        slider.snp.remakeConstraints {
-            sliderTopToBanner = $0.top.equalTo(subscribeBannerButton.snp.bottom).offset(AppSpacing.md).constraint
-            sliderTopToTrackInfo = $0.top.equalTo(trackInfoStack.snp.bottom).offset(AppSpacing.md).constraint
+        setupSliderConstraints(trackInfoAnchor: trackInfoStack.snp.bottom) {
             $0.horizontalEdges.equalToSuperview().inset(AppSpacing.xl)
-        }
-
-        currentTimeLabel.snp.remakeConstraints {
-            $0.top.equalTo(slider.snp.bottom).offset(AppSpacing.xs)
-            $0.leading.equalTo(slider)
-        }
-
-        totalTimeLabel.snp.remakeConstraints {
-            $0.top.equalTo(currentTimeLabel)
-            $0.trailing.equalTo(slider)
         }
 
         controlStack.snp.remakeConstraints {
@@ -363,20 +351,8 @@ final class PlayerView: BaseView {
             $0.centerX.equalToSuperview()
         }
 
-        slider.snp.remakeConstraints {
-            sliderTopToBanner = $0.top.equalTo(subscribeBannerButton.snp.bottom).offset(AppSpacing.sm).constraint
-            sliderTopToTrackInfo = $0.top.equalTo(artworkImageView.snp.bottom).offset(AppSpacing.md).constraint
+        setupSliderConstraints(trackInfoAnchor: artworkImageView.snp.bottom, bannerOffset: AppSpacing.sm) {
             $0.horizontalEdges.equalToSuperview().inset(AppSpacing.xl)
-        }
-
-        currentTimeLabel.snp.remakeConstraints {
-            $0.top.equalTo(slider.snp.bottom).offset(AppSpacing.xs)
-            $0.leading.equalTo(slider)
-        }
-
-        totalTimeLabel.snp.remakeConstraints {
-            $0.top.equalTo(currentTimeLabel)
-            $0.trailing.equalTo(slider)
         }
 
         currentQueueButton.snp.remakeConstraints {
@@ -414,21 +390,9 @@ final class PlayerView: BaseView {
             $0.leading.equalTo(trackInfoStack)
         }
 
-        slider.snp.remakeConstraints {
-            sliderTopToBanner = $0.top.equalTo(subscribeBannerButton.snp.bottom).offset(AppSpacing.md).constraint
-            sliderTopToTrackInfo = $0.top.equalTo(trackInfoStack.snp.bottom).offset(AppSpacing.md).constraint
+        setupSliderConstraints(trackInfoAnchor: trackInfoStack.snp.bottom) {
             $0.leading.equalTo(trackInfoStack)
             $0.trailing.equalTo(safeAreaLayoutGuide).inset(AppSpacing.xl)
-        }
-
-        currentTimeLabel.snp.remakeConstraints {
-            $0.top.equalTo(slider.snp.bottom).offset(AppSpacing.xs)
-            $0.leading.equalTo(slider)
-        }
-
-        totalTimeLabel.snp.remakeConstraints {
-            $0.top.equalTo(currentTimeLabel)
-            $0.trailing.equalTo(slider)
         }
 
         controlStack.snp.remakeConstraints {
@@ -457,6 +421,26 @@ final class PlayerView: BaseView {
                 $0.trailing.equalTo(safeAreaLayoutGuide).inset(AppSpacing.xl)
                 $0.height.equalTo(0)
             }
+        }
+    }
+
+    private func setupSliderConstraints(
+        trackInfoAnchor: ConstraintItem,
+        bannerOffset: CGFloat = AppSpacing.md,
+        makeHorizontal: (ConstraintMaker) -> Void
+    ) {
+        slider.snp.remakeConstraints {
+            sliderTopToBanner = $0.top.equalTo(subscribeBannerButton.snp.bottom).offset(bannerOffset).constraint
+            sliderTopToTrackInfo = $0.top.equalTo(trackInfoAnchor).offset(AppSpacing.md).constraint
+            makeHorizontal($0)
+        }
+        currentTimeLabel.snp.remakeConstraints {
+            $0.top.equalTo(slider.snp.bottom).offset(AppSpacing.xs)
+            $0.leading.equalTo(slider)
+        }
+        totalTimeLabel.snp.remakeConstraints {
+            $0.top.equalTo(currentTimeLabel)
+            $0.trailing.equalTo(slider)
         }
     }
 
