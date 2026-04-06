@@ -1,6 +1,7 @@
 import Foundation
 import RxSwift
 import RxCocoa
+import WidgetKit
 
 final class HomeViewModel: ViewModelType {
 
@@ -65,6 +66,19 @@ final class HomeViewModel: ViewModelType {
             .flatMapLatest {
                 MusicSearchService.shared.fetchTopCharts(limit: 100)
                     .catchAndReturn([])
+            }
+            .do { songs in
+                let top100 = songs.prefix(5).enumerated().map { index, song in
+                    Top100Song(
+                        rank: index + 1,
+                        musicID: song.musicID,
+                        title: song.title,
+                        artist: song.artist,
+                        artworkUrl: song.artworkUrl
+                    )
+                }
+                UserDefaults.groupShared.top100Songs = top100
+                WidgetCenter.shared.reloadTimelines(ofKind: "VittoWidget")
             }
             .asDriver(onErrorJustReturn: [])
 
