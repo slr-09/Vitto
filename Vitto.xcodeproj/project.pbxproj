@@ -9,17 +9,55 @@
 /* Begin PBXBuildFile section */
 		231113D22F7E8B82003CF8F9 /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 231113D12F7E8B82003CF8F9 /* FirebaseAnalyticsCore */; };
 		231113D42F7E8B82003CF8F9 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 231113D32F7E8B82003CF8F9 /* FirebaseCrashlytics */; };
+		231119092F83EE54003CF8F9 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 231119082F83EE54003CF8F9 /* WidgetKit.framework */; };
+		2311190B2F83EE54003CF8F9 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2311190A2F83EE54003CF8F9 /* SwiftUI.framework */; };
+		231119162F83EE56003CF8F9 /* VittoWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 231119062F83EE54003CF8F9 /* VittoWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		23EF9FD42F6E630000CD87AF /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 23EF9FD32F6E630000CD87AF /* SnapKit */; };
 		23EF9FD72F6E631400CD87AF /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 23EF9FD62F6E631400CD87AF /* RxCocoa */; };
 		23EF9FD92F6E631400CD87AF /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 23EF9FD82F6E631400CD87AF /* RxSwift */; };
 		23EFA0452F6E9E3000CD87AF /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 23EFA0442F6E9E3000CD87AF /* Kingfisher */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		231119142F83EE56003CF8F9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 23EF9FB22F6E530D00CD87AF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 231119052F83EE54003CF8F9;
+			remoteInfo = VittoWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		231119172F83EE56003CF8F9 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				231119162F83EE56003CF8F9 /* VittoWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		231119062F83EE54003CF8F9 /* VittoWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VittoWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		231119082F83EE54003CF8F9 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		2311190A2F83EE54003CF8F9 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		2311191C2F83F7BE003CF8F9 /* VittoWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VittoWidgetExtension.entitlements; sourceTree = "<group>"; };
 		23EF9FBA2F6E530D00CD87AF /* Vitto.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Vitto.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		2311191B2F83EE56003CF8F9 /* Exceptions for "VittoWidget" folder in "VittoWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 231119052F83EE54003CF8F9 /* VittoWidgetExtension */;
+		};
 		23EF9FCC2F6E530F00CD87AF /* Exceptions for "Vitto" folder in "Vitto" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -30,6 +68,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		2311190C2F83EE54003CF8F9 /* VittoWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2311191B2F83EE56003CF8F9 /* Exceptions for "VittoWidget" folder in "VittoWidgetExtension" target */,
+			);
+			path = VittoWidget;
+			sourceTree = "<group>";
+		};
 		23EF9FBC2F6E530D00CD87AF /* Vitto */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -41,6 +87,15 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		231119032F83EE54003CF8F9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2311190B2F83EE54003CF8F9 /* SwiftUI.framework in Frameworks */,
+				231119092F83EE54003CF8F9 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		23EF9FB72F6E530D00CD87AF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -57,10 +112,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		231119072F83EE54003CF8F9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				231119082F83EE54003CF8F9 /* WidgetKit.framework */,
+				2311190A2F83EE54003CF8F9 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		23EF9FB12F6E530D00CD87AF = {
 			isa = PBXGroup;
 			children = (
+				2311191C2F83F7BE003CF8F9 /* VittoWidgetExtension.entitlements */,
 				23EF9FBC2F6E530D00CD87AF /* Vitto */,
+				2311190C2F83EE54003CF8F9 /* VittoWidget */,
+				231119072F83EE54003CF8F9 /* Frameworks */,
 				23EF9FBB2F6E530D00CD87AF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -69,6 +136,7 @@
 			isa = PBXGroup;
 			children = (
 				23EF9FBA2F6E530D00CD87AF /* Vitto.app */,
+				231119062F83EE54003CF8F9 /* VittoWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -76,6 +144,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		231119052F83EE54003CF8F9 /* VittoWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2311191A2F83EE56003CF8F9 /* Build configuration list for PBXNativeTarget "VittoWidgetExtension" */;
+			buildPhases = (
+				231119022F83EE54003CF8F9 /* Sources */,
+				231119032F83EE54003CF8F9 /* Frameworks */,
+				231119042F83EE54003CF8F9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				2311190C2F83EE54003CF8F9 /* VittoWidget */,
+			);
+			name = VittoWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = VittoWidgetExtension;
+			productReference = 231119062F83EE54003CF8F9 /* VittoWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		23EF9FB92F6E530D00CD87AF /* Vitto */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 23EF9FCD2F6E530F00CD87AF /* Build configuration list for PBXNativeTarget "Vitto" */;
@@ -84,10 +174,12 @@
 				23EF9FB72F6E530D00CD87AF /* Frameworks */,
 				23EF9FB82F6E530D00CD87AF /* Resources */,
 				231113D52F7E92B4003CF8F9 /* Run Script */,
+				231119172F83EE56003CF8F9 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				231119152F83EE56003CF8F9 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				23EF9FBC2F6E530D00CD87AF /* Vitto */,
@@ -115,6 +207,9 @@
 				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 2630;
 				TargetAttributes = {
+					231119052F83EE54003CF8F9 = {
+						CreatedOnToolsVersion = 26.3;
+					};
 					23EF9FB92F6E530D00CD87AF = {
 						CreatedOnToolsVersion = 26.3;
 					};
@@ -141,11 +236,19 @@
 			projectRoot = "";
 			targets = (
 				23EF9FB92F6E530D00CD87AF /* Vitto */,
+				231119052F83EE54003CF8F9 /* VittoWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		231119042F83EE54003CF8F9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		23EF9FB82F6E530D00CD87AF /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -183,6 +286,13 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		231119022F83EE54003CF8F9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		23EF9FB62F6E530D00CD87AF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -192,7 +302,77 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		231119152F83EE56003CF8F9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 231119052F83EE54003CF8F9 /* VittoWidgetExtension */;
+			targetProxy = 231119142F83EE56003CF8F9 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		231119182F83EE56003CF8F9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = VittoWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZT27N85LQ5;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VittoWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = VittoWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.siro.Vitto.VittoWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		231119192F83EE56003CF8F9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = VittoWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZT27N85LQ5;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VittoWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = VittoWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.siro.Vitto.VittoWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		23EF9FCE2F6E530F00CD87AF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -402,6 +582,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		2311191A2F83EE56003CF8F9 /* Build configuration list for PBXNativeTarget "VittoWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				231119182F83EE56003CF8F9 /* Debug */,
+				231119192F83EE56003CF8F9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		23EF9FB52F6E530D00CD87AF /* Build configuration list for PBXProject "Vitto" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
