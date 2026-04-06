@@ -18,7 +18,7 @@ struct Provider: TimelineProvider {
         completion(entry)
     }
 
-    // 위젯 상태 변경 시점 
+    // 위젯 상태 변경 시점
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         var entries: [SimpleEntry] = []
 
