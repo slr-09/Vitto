@@ -58,6 +58,14 @@
 			);
 			target = 231119052F83EE54003CF8F9 /* VittoWidgetExtension */;
 		};
+		23111A322F840FCC003CF8F9 /* Exceptions for "Vitto" folder in "VittoWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Shared/SharedModel.swift,
+				"Shared/SharedUserDefaults+.swift",
+			);
+			target = 231119052F83EE54003CF8F9 /* VittoWidgetExtension */;
+		};
 		23EF9FCC2F6E530F00CD87AF /* Exceptions for "Vitto" folder in "Vitto" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -80,6 +88,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				23EF9FCC2F6E530F00CD87AF /* Exceptions for "Vitto" folder in "Vitto" target */,
+				23111A322F840FCC003CF8F9 /* Exceptions for "Vitto" folder in "VittoWidgetExtension" target */,
 			);
 			path = Vitto;
 			sourceTree = "<group>";
@@ -173,8 +182,8 @@
 				23EF9FB62F6E530D00CD87AF /* Sources */,
 				23EF9FB72F6E530D00CD87AF /* Frameworks */,
 				23EF9FB82F6E530D00CD87AF /* Resources */,
-				231113D52F7E92B4003CF8F9 /* Run Script */,
 				231119172F83EE56003CF8F9 /* Embed Foundation Extensions */,
+				231113D52F7E92B4003CF8F9 /* Run Script */,
 			);
 			buildRules = (
 			);

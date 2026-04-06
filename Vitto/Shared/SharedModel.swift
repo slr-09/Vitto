@@ -1,3 +1,10 @@
+//
+//  SharedModel.swift
+//  Vitto
+//
+//  Created by 가은 on 4/7/26.
+//
+
 import Foundation
 
 struct Top100Song: Codable {
