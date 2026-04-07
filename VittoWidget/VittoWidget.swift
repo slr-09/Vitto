@@ -8,52 +8,110 @@
 import WidgetKit
 import SwiftUI
 
+// MARK: - Timeline Entry
+
+struct Top100Entry: TimelineEntry {
+    let date: Date
+    let songs: [Top100Song]
+}
+
+// MARK: - Timeline Provider
+
 struct Provider: TimelineProvider {
-    func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), emoji: "😀")
+    /// 위젯 로딩 중 표시할 placeholder
+    func placeholder(in context: Context) -> Top100Entry {
+        Top100Entry(date: Date(), songs: [])
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let entry = SimpleEntry(date: Date(), emoji: "😀")
-        completion(entry)
+    /// 위젯 갤러리 미리보기용 스냅샷
+    func getSnapshot(in context: Context, completion: @escaping (Top100Entry) -> ()) {
+        let songs = UserDefaults.groupShared.top100Songs
+        completion(Top100Entry(date: Date(), songs: songs))
     }
 
-    // 위젯 상태 변경 시점
+    /// 매 정각마다 갱신되는 타임라인 생성
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
-        var entries: [SimpleEntry] = []
+        let now = Date()
+        let songs = UserDefaults.groupShared.top100Songs
+        let entry = Top100Entry(date: now, songs: songs)
 
-        // Generate a timeline consisting of five entries an hour apart, starting from the current date.
-        let currentDate = Date()
-        for hourOffset in 0 ..< 5 {
-            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let entry = SimpleEntry(date: entryDate, emoji: "😀")
-            entries.append(entry)
-        }
-
-        let timeline = Timeline(entries: entries, policy: .atEnd)
+        let nextHour = Calendar.current.dateInterval(of: .hour, for: now)!.end
+        let timeline = Timeline(entries: [entry], policy: .after(nextHour))
         completion(timeline)
     }
-
-//    func relevances() async -> WidgetRelevances<Void> {
-//        // Generate a list containing the contexts this widget is relevant in.
-//    }
 }
 
-struct SimpleEntry: TimelineEntry {
-    let date: Date
-    let emoji: String
-}
+// MARK: - Widget View
 
-struct VittoWidgetEntryView : View {
-    var entry: Provider.Entry
+struct VittoWidgetEntryView: View {
+    var entry: Top100Entry
+
+    @Environment(\.widgetFamily) var family
+
+    /// 위젯 사이즈별 표시 곡 수
+    private var songCount: Int {
+        switch family {
+        case .systemSmall, .systemMedium: return 3
+        default: return 3
+        }
+    }
+
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter
+    }()
 
     var body: some View {
-        VStack {
-            Text("Time:")
-            Text(entry.date, style: .time)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("Top 100")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(Self.timeFormatter.string(from: entry.date) + " 업데이트")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.bottom, 6)
 
-            Text("Emoji:")
-            Text(entry.emoji)
+            if entry.songs.isEmpty {
+                Spacer()
+                Text("앱을 실행하면 차트가 표시됩니다")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
+                Spacer()
+            } else {
+                let songs = Array(entry.songs.prefix(songCount))
+
+                ForEach(Array(songs.enumerated()), id: \.element.musicID) { index, song in
+                    HStack(spacing: 8) {
+                        Text("\(song.rank)")
+                            .font(.system(size: 14, weight: .bold))
+                            .frame(width: 20, alignment: .center)
+
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(song.title)
+                                .font(.system(size: 13, weight: .semibold))
+                                .lineLimit(1)
+                            Text(song.artist)
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+
+                        Spacer()
+                    }
+                    .padding(.vertical, 3)
+
+                    if index < songs.count - 1 {
+                        Divider()
+                    }
+                }
+            }
+
+            Spacer(minLength: 0)
         }
     }
 }
@@ -72,14 +130,32 @@ struct VittoWidget: Widget {
                     .background()
             }
         }
-        .configurationDisplayName("My Widget")
-        .description("This is an example widget.")
+        .configurationDisplayName("Vitto Top 100")
+        .description("실시간 Top 100 차트를 확인하세요.")
+        .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
+
+// MARK: - Preview
 
 #Preview(as: .systemSmall) {
     VittoWidget()
 } timeline: {
-    SimpleEntry(date: .now, emoji: "😀")
-    SimpleEntry(date: .now, emoji: "🤩")
+    Top100Entry(date: .now, songs: [
+        Top100Song(rank: 1, musicID: "1", title: "APT.", artist: "ROSÉ & Bruno Mars", artworkUrl: ""),
+        Top100Song(rank: 2, musicID: "2", title: "Die With A Smile", artist: "Lady Gaga & Bruno Mars", artworkUrl: ""),
+        Top100Song(rank: 3, musicID: "3", title: "Espresso", artist: "Sabrina Carpenter", artworkUrl: ""),
+    ])
+}
+
+#Preview(as: .systemMedium) {
+    VittoWidget()
+} timeline: {
+    Top100Entry(date: .now, songs: [
+        Top100Song(rank: 1, musicID: "1", title: "APT.", artist: "ROSÉ & Bruno Mars", artworkUrl: ""),
+        Top100Song(rank: 2, musicID: "2", title: "Die With A Smile", artist: "Lady Gaga & Bruno Mars", artworkUrl: ""),
+        Top100Song(rank: 3, musicID: "3", title: "Espresso", artist: "Sabrina Carpenter", artworkUrl: ""),
+        Top100Song(rank: 4, musicID: "4", title: "Birds of a Feather", artist: "Billie Eilish", artworkUrl: ""),
+        Top100Song(rank: 5, musicID: "5", title: "That's So True", artist: "Gracie Abrams", artworkUrl: ""),
+    ])
 }
