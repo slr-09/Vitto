@@ -91,6 +91,22 @@ struct VittoWidgetEntryView: View {
                             .font(.system(size: 14, weight: .bold))
                             .frame(width: 20, alignment: .center)
 
+                        if let url = SharedFileStorage.artworkURL(for: song.musicID),
+                           let data = try? Data(contentsOf: url),
+                           let uiImage = UIImage(data: data) {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 32, height: 32)
+                                .clipShape(RoundedRectangle(cornerRadius: 4))
+                        } else {
+                            Image(systemName: "music.note")
+                                .foregroundStyle(.secondary)
+                                .frame(width: 32, height: 32)
+                                .background(Color.gray.opacity(0.2))
+                                .clipShape(RoundedRectangle(cornerRadius: 4))
+                        }
+
                         VStack(alignment: .leading, spacing: 1) {
                             Text(song.title)
                                 .font(.system(size: 13, weight: .semibold))

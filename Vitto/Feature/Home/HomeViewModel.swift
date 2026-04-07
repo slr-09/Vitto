@@ -68,7 +68,8 @@ final class HomeViewModel: ViewModelType {
                     .catchAndReturn([])
             }
             .do { songs in
-                let top100 = songs.prefix(5).enumerated().map { index, song in
+                let topSongs = Array(songs.prefix(5))
+                let top100 = topSongs.enumerated().map { index, song in
                     Top100Song(
                         rank: index + 1,
                         musicID: song.musicID,
@@ -78,7 +79,16 @@ final class HomeViewModel: ViewModelType {
                     )
                 }
                 UserDefaults.groupShared.top100Songs = top100
-                WidgetCenter.shared.reloadTimelines(ofKind: "VittoWidget")
+
+                SharedFileStorage.cleanupArtworks()
+                DispatchQueue.global(qos: .utility).async {
+                    for song in topSongs {
+                        guard let url = URL(string: song.artworkUrl),
+                              let data = try? Data(contentsOf: url) else { continue }
+                        SharedFileStorage.saveArtwork(musicID: song.musicID, data: data)
+                    }
+                    WidgetCenter.shared.reloadTimelines(ofKind: "VittoWidget")
+                }
             }
             .asDriver(onErrorJustReturn: [])
 

@@ -61,6 +61,7 @@
 		23111A322F840FCC003CF8F9 /* Exceptions for "Vitto" folder in "VittoWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Shared/SharedFileStorage.swift,
 				Shared/SharedModel.swift,
 				"Shared/SharedUserDefaults+.swift",
 			);
