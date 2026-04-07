@@ -84,8 +84,9 @@ final class HomeViewModel: ViewModelType {
                 DispatchQueue.global(qos: .utility).async {
                     for song in topSongs {
                         guard let url = URL(string: song.artworkUrl),
-                              let data = try? Data(contentsOf: url) else { continue }
-                        SharedFileStorage.saveArtwork(musicID: song.musicID, data: data)
+                              let data = try? Data(contentsOf: url),
+                              let resizedData = ImageService.resizedJPEGData(from: data, maxSize: 64) else { continue }
+                        SharedFileStorage.saveArtwork(musicID: song.musicID, data: resizedData)
                     }
                     WidgetCenter.shared.reloadTimelines(ofKind: "VittoWidget")
                 }
