@@ -89,6 +89,14 @@ final class MainTabBarController: UITabBarController {
         }
     }
 
+    // MARK: - Deep Link
+
+    enum DeepLink {
+        case top100
+    }
+
+    let deepLinkRelay = BehaviorRelay<DeepLink?>(value: nil)
+
     private func setupMiniPlayer() {
         view.addSubview(miniPlayerView)
         applyMiniPlayerConstraints()

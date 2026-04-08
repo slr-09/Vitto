@@ -139,9 +139,11 @@ struct VittoWidget: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             if #available(iOS 17.0, *) {
                 VittoWidgetEntryView(entry: entry)
+                    .widgetURL(URL(string: "vitto://top100"))
                     .containerBackground(.fill.tertiary, for: .widget)
             } else {
                 VittoWidgetEntryView(entry: entry)
+                    .widgetURL(URL(string: "vitto://top100"))
                     .padding()
                     .background()
             }
