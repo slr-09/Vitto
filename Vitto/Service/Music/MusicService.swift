@@ -447,7 +447,7 @@ extension Song {
             totalDurationMs: Int((duration ?? 0) * 1000),
             isrc: isrc ?? "",
             albumTitle: albumTitle ?? "",
-            artworkUrl: artwork?.url(width: 300, height: 300)?.absoluteString ?? "",
+            artworkUrl: artwork?.url(width: 1000, height: 1000)?.absoluteString ?? "",
             genres: genreNames,
             previewUrl: previewAssets?.first?.url?.absoluteString
         )
