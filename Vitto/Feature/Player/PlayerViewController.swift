@@ -189,6 +189,13 @@ final class PlayerViewController: BaseViewController {
                 cell.setCurrentlyPlaying(index == musicService?.currentIndex.value)
             }
             .disposed(by: disposeBag)
+
+        // 셀 탭 → 해당 곡으로 재생 전환
+        playerView.currentQueueTableView.rx.itemSelected
+            .bind(with: self) { _, indexPath in
+                Task { try? await musicService.skipToIndex(indexPath.row) }
+            }
+            .disposed(by: disposeBag)
     }
 
     // MARK: - Slider Events
