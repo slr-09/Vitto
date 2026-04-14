@@ -7,20 +7,42 @@
 
 import UIKit
 import RxSwift
+import RxCocoa
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
     private let disposeBag = DisposeBag()
 
+    // 앱이 종료된 상태에서 첫 실행
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         let window = UIWindow(windowScene: windowScene)
-        window.rootViewController = MainTabBarController()
+        let tabBarController = MainTabBarController()
+        window.rootViewController = tabBarController
         window.makeKeyAndVisible()
         self.window = window
 
         checkAppleMusicSubscription()
+
+        // - connectionOptions: 앱 실행 시 함께 전달된 정보 (URL, shortcut, notification 등)
+        // - urlContexts: 앱을 실행시킨 URL 목록 (Set<UIOpenURLContext>)
+        if let url = connectionOptions.urlContexts.first?.url {
+            handleDeepLink(url)
+        }
+    }
+
+    // 앱이 이미 실행 중일 떄
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        guard let url = URLContexts.first?.url else { return }
+        handleDeepLink(url)
+    }
+
+    private func handleDeepLink(_ url: URL) {
+        guard url.scheme == "vitto", url.host == "top100",
+              let tabBarController = window?.rootViewController as? MainTabBarController else { return }
+        tabBarController.selectedIndex = 0
+        tabBarController.deepLinkRelay.accept(.top100)
     }
 
     // MARK: - Apple Music 구독 체크

@@ -1,6 +1,7 @@
 import Foundation
 import RxSwift
 import RxCocoa
+import WidgetKit
 
 final class HomeViewModel: ViewModelType {
 
@@ -65,6 +66,30 @@ final class HomeViewModel: ViewModelType {
             .flatMapLatest {
                 MusicSearchService.shared.fetchTopCharts(limit: 100)
                     .catchAndReturn([])
+            }
+            .do { songs in
+                let topSongs = Array(songs.prefix(5))
+                let top100 = topSongs.enumerated().map { index, song in
+                    Top100Song(
+                        rank: index + 1,
+                        musicID: song.musicID,
+                        title: song.title,
+                        artist: song.artist,
+                        artworkUrl: song.artworkUrl
+                    )
+                }
+                UserDefaults.groupShared.top100Songs = top100
+
+                SharedFileStorage.cleanupArtworks()
+                DispatchQueue.global(qos: .utility).async {
+                    for song in topSongs {
+                        guard let url = URL(string: song.artworkUrl),
+                              let data = try? Data(contentsOf: url),
+                              let resizedData = ImageService.resizedJPEGData(from: data, maxSize: 64) else { continue }
+                        SharedFileStorage.saveArtwork(musicID: song.musicID, data: resizedData)
+                    }
+                    WidgetCenter.shared.reloadTimelines(ofKind: "VittoWidget")
+                }
             }
             .asDriver(onErrorJustReturn: [])
 

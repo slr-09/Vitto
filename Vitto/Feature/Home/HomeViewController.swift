@@ -73,6 +73,24 @@ final class HomeViewController: BaseViewController {
             }
             .disposed(by: disposeBag)
 
+        // MARK: - Deep Link
+        if let tabBar = tabBarController as? MainTabBarController {
+            tabBar.deepLinkRelay
+                .compactMap { $0 }
+                .filter { $0 == .top100 }
+                .flatMapLatest { _ in output.topSongs.asObservable().take(1) }
+                .bind(with: self) { owner, songs in
+                    tabBar.deepLinkRelay.accept(nil)
+                    
+                    // Top 100 이미 떠 있을 때
+                    guard !(owner.navigationController?.topViewController is Top100DetailViewController) else { return }
+                    
+                    let detailVC = Top100DetailViewController(songs: songs)
+                    owner.navigationController?.pushViewController(detailVC, animated: true)
+                }
+                .disposed(by: disposeBag)
+        }
+
         // MARK: - Top 100 바인딩
         output.topSongs
             .map { Array($0.prefix(5)) }
