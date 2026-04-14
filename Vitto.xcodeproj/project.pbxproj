@@ -7,11 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		231113D22F7E8B82003CF8F9 /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 231113D12F7E8B82003CF8F9 /* FirebaseAnalyticsCore */; };
 		231113D42F7E8B82003CF8F9 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 231113D32F7E8B82003CF8F9 /* FirebaseCrashlytics */; };
 		231119092F83EE54003CF8F9 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 231119082F83EE54003CF8F9 /* WidgetKit.framework */; };
 		2311190B2F83EE54003CF8F9 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2311190A2F83EE54003CF8F9 /* SwiftUI.framework */; };
 		231119162F83EE56003CF8F9 /* VittoWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 231119062F83EE54003CF8F9 /* VittoWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		2399B1A02F8E912F00A562D2 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 2399B19F2F8E912F00A562D2 /* FirebaseAnalytics */; };
 		23EF9FD42F6E630000CD87AF /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 23EF9FD32F6E630000CD87AF /* SnapKit */; };
 		23EF9FD72F6E631400CD87AF /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 23EF9FD62F6E631400CD87AF /* RxCocoa */; };
 		23EF9FD92F6E631400CD87AF /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 23EF9FD82F6E631400CD87AF /* RxSwift */; };
@@ -112,7 +112,7 @@
 			files = (
 				23EFA0452F6E9E3000CD87AF /* Kingfisher in Frameworks */,
 				23EF9FD92F6E631400CD87AF /* RxSwift in Frameworks */,
-				231113D22F7E8B82003CF8F9 /* FirebaseAnalyticsCore in Frameworks */,
+				2399B1A02F8E912F00A562D2 /* FirebaseAnalytics in Frameworks */,
 				231113D42F7E8B82003CF8F9 /* FirebaseCrashlytics in Frameworks */,
 				23EF9FD72F6E631400CD87AF /* RxCocoa in Frameworks */,
 				23EF9FD42F6E630000CD87AF /* SnapKit in Frameworks */,
@@ -200,8 +200,8 @@
 				23EF9FD62F6E631400CD87AF /* RxCocoa */,
 				23EF9FD82F6E631400CD87AF /* RxSwift */,
 				23EFA0442F6E9E3000CD87AF /* Kingfisher */,
-				231113D12F7E8B82003CF8F9 /* FirebaseAnalyticsCore */,
 				231113D32F7E8B82003CF8F9 /* FirebaseCrashlytics */,
+				2399B19F2F8E912F00A562D2 /* FirebaseAnalytics */,
 			);
 			productName = Vitto;
 			productReference = 23EF9FBA2F6E530D00CD87AF /* Vitto.app */;
@@ -667,15 +667,15 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		231113D12F7E8B82003CF8F9 /* FirebaseAnalyticsCore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 231113D02F7E8B82003CF8F9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAnalyticsCore;
-		};
 		231113D32F7E8B82003CF8F9 /* FirebaseCrashlytics */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 231113D02F7E8B82003CF8F9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCrashlytics;
+		};
+		2399B19F2F8E912F00A562D2 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 231113D02F7E8B82003CF8F9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
 		};
 		23EF9FD32F6E630000CD87AF /* SnapKit */ = {
 			isa = XCSwiftPackageProductDependency;
