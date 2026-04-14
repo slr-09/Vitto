@@ -25,6 +25,7 @@ final class PlayerViewModel {
         let isPlaying: Driver<Bool>
         let progress: Driver<Float>             // 0.0 ~ 1.0
         let currentTimeText: Driver<String>
+        let seekingTimeText: Driver<String>     // 슬라이더 드래그 중 표시할 시간
         let totalTimeText: Driver<String>
     }
 
@@ -39,18 +40,18 @@ final class PlayerViewModel {
 
         // 재생/일시정지
         input.playPauseTap
-            .subscribe(onNext: {
+            .bind(with: self) { _, _ in
                 if musicService.isPlaying.value {
                     musicService.pause()
                 } else {
                     Task { try? await musicService.resume() }
                 }
-            })
+            }
             .disposed(by: disposeBag)
 
         // 이전 곡 (5초 이내면 이전 곡, 아니면 처음으로)
         input.skipPrevTap
-            .subscribe(onNext: {
+            .bind(with: self) { _, _ in
                 let current = player.playbackTime
                 if current > 5 {
                     player.playbackTime = 0
@@ -58,26 +59,26 @@ final class PlayerViewModel {
                 } else {
                     Task { try? await musicService.skipToPreviousEntry() }
                 }
-            })
+            }
             .disposed(by: disposeBag)
 
         // 다음 곡
         input.skipNextTap
-            .subscribe(onNext: {
+            .bind(with: self) { _, _ in
                 Task { try? await musicService.skipToNextEntry() }
-            })
+            }
             .disposed(by: disposeBag)
 
         // 슬라이더 터치업 → seek
         input.sliderTouchUp
-            .subscribe(onNext: { value in
+            .bind(with: self) { _, value in
                 guard let totalMs = musicService.currentMusic.value?.totalDurationMs,
                       totalMs > 0 else { return }
                 let totalSeconds = Double(totalMs) / 1000.0
                 let seekTime = Double(value) * totalSeconds
                 player.playbackTime = seekTime
                 musicService.playbackTime.accept(seekTime)
-            })
+            }
             .disposed(by: disposeBag)
 
         // 진행률
@@ -94,14 +95,23 @@ final class PlayerViewModel {
 
         // 현재 시간 텍스트
         let currentTimeText = musicService.playbackTime
-            .map { Self.formatTime($0) }
+            .map { TimeFormatter.format($0) }
+            .asDriver(onErrorJustReturn: "0:00")
+
+        // 슬라이더 드래그 중 시간 텍스트
+        let seekingTimeText = input.sliderChanged
+            .withLatestFrom(musicService.currentMusic) { sliderValue, music -> String in
+                guard let ms = music?.totalDurationMs, ms > 0 else { return "0:00" }
+                let seconds = Double(sliderValue) * Double(ms) / 1000.0
+                return TimeFormatter.format(seconds)
+            }
             .asDriver(onErrorJustReturn: "0:00")
 
         // 전체 시간 텍스트
         let totalTimeText = musicService.currentMusic
             .map { music -> String in
                 guard let ms = music?.totalDurationMs else { return "0:00" }
-                return Self.formatTime(Double(ms) / 1000.0)
+                return TimeFormatter.format(Double(ms) / 1000.0)
             }
             .asDriver(onErrorJustReturn: "0:00")
 
@@ -110,13 +120,8 @@ final class PlayerViewModel {
             isPlaying: musicService.isPlaying.asDriver(),
             progress: progress,
             currentTimeText: currentTimeText,
+            seekingTimeText: seekingTimeText,
             totalTimeText: totalTimeText
         )
-    }
-
-    // MARK: - Helpers
-    private static func formatTime(_ seconds: TimeInterval) -> String {
-        let s = Int(max(0, seconds))
-        return String(format: "%d:%02d", s / 60, s % 60)
     }
 }

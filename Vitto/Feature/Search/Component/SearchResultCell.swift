@@ -64,19 +64,18 @@ final class SearchResultCell: BaseTableViewCell {
     }()
 
     var onMoreButtonTapped: (() -> Void)?
-    
+
     private let disposeBag = DisposeBag()
 
     // MARK: - Setup
     private var artworkLeadingToSuperview: Constraint?
     private var artworkLeadingToRank: Constraint?
-    
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        
         setupActions()
     }
-    
+
     private func setupActions() {
         moreButton.rx.tap
             .bind(with: self) { owner, _ in
@@ -144,6 +143,15 @@ final class SearchResultCell: BaseTableViewCell {
         }
     }
 
+    func setCurrentlyPlaying(_ isCurrent: Bool) {
+        titleLabel.textColor = isCurrent ? AppColor.secondary : AppColor.onBackground
+    }
+
+    // queue 모드: moreButton 숨김 (시스템 reorder control이 핸들 역할)
+    func setQueueMode(_ enabled: Bool) {
+        moreButton.isHidden = enabled
+    }
+
     // MARK: - Prepare for Reuse
     override func prepareForReuse() {
         super.prepareForReuse()
@@ -151,8 +159,10 @@ final class SearchResultCell: BaseTableViewCell {
         artworkImageView.image = nil
         onMoreButtonTapped = nil
         rankLabel.isHidden = true
+        titleLabel.textColor = AppColor.onBackground
         artworkLeadingToRank?.deactivate()
         artworkLeadingToSuperview?.activate()
+        moreButton.isHidden = false
     }
 
     // MARK: - Configure
@@ -175,3 +185,4 @@ final class SearchResultCell: BaseTableViewCell {
         }
     }
 }
+

@@ -56,6 +56,9 @@ final class MusicService {
     let hasNext = BehaviorRelay<Bool>(value: false)
     let hasPrevious = BehaviorRelay<Bool>(value: false)
 
+    /// 구독자용: skipToIndex에서 네트워크 없이 재사용하기 위한 Song 캐시
+    private var cachedSongs: [Song] = []
+
     private var progressTimer: Timer?
     
     // MARK: - Player State Observation
@@ -177,6 +180,7 @@ final class MusicService {
                 previewPlayer.updateNowPlayingInfo(for: filteredMusics[adjustedIndex], isPlaying: true)
             }
 
+            cachedSongs = orderedSongs
             queue.accept(filteredMusics)
             currentIndex.accept(adjustedIndex)
             currentMusic.accept(filteredMusics[adjustedIndex])
@@ -341,44 +345,75 @@ final class MusicService {
         print("[MusicService] 정지")
     }
 
+    /// 큐 내 항목 순서 변경
+    func moveQueueItem(from sourceIndex: Int, to destinationIndex: Int) {
+        guard sourceIndex != destinationIndex else { return }
+
+        var currentQueue = queue.value
+        guard sourceIndex < currentQueue.count, destinationIndex < currentQueue.count else { return }
+        let item = currentQueue.remove(at: sourceIndex)
+        currentQueue.insert(item, at: destinationIndex)
+
+        if !isPreviewMode, sourceIndex < cachedSongs.count, destinationIndex < cachedSongs.count {
+            let song = cachedSongs.remove(at: sourceIndex)
+            cachedSongs.insert(song, at: destinationIndex)
+        }
+
+        // currentIndex 재계산
+        let current = currentIndex.value
+        var newIndex = current
+        if sourceIndex == current {
+            newIndex = destinationIndex
+        } else if sourceIndex < current && destinationIndex >= current {
+            newIndex = current - 1
+        } else if sourceIndex > current && destinationIndex <= current {
+            newIndex = current + 1
+        }
+
+        queue.accept(currentQueue)
+        if newIndex != current {
+            currentIndex.accept(newIndex)
+        }
+    }
+
+    /// 큐에서 특정 인덱스로 이동
+    func skipToIndex(_ index: Int) async throws {
+        let currentQueue = queue.value
+        guard index >= 0, index < currentQueue.count else { return }
+
+        if isPreviewMode {
+            previewPlayer.play(for: currentQueue[index])
+            previewPlayer.updateNowPlayingInfo(for: currentQueue[index], isPlaying: true)
+        } else {
+            guard index < cachedSongs.count else { return }
+            player.queue = ApplicationMusicPlayer.Queue(
+                for: cachedSongs,
+                startingAt: cachedSongs[index]
+            )
+            try await player.play()
+        }
+        currentIndex.accept(index)
+        currentMusic.accept(currentQueue[index])
+        playbackTime.accept(0)
+        isPlaying.accept(true)
+        startProgressTimer()
+    }
+
     /// 다음 곡
     func skipToNextEntry() async throws {
-        let currentQueue = queue.value
         let nextIndex = currentIndex.value + 1
-        guard nextIndex < currentQueue.count else {
-            // 마지막 곡 → 재생 종료
+        guard nextIndex < queue.value.count else {
             stop()
             return
         }
-
-        if isPreviewMode {
-            previewPlayer.play(for: currentQueue[nextIndex])
-            previewPlayer.updateNowPlayingInfo(for: currentQueue[nextIndex], isPlaying: true)
-        } else {
-            try await player.skipToNextEntry()
-        }
-        currentIndex.accept(nextIndex)
-        currentMusic.accept(currentQueue[nextIndex])
-        playbackTime.accept(0)
-        print("[MusicService] 다음 곡 재생: \(currentQueue[nextIndex].title)")
+        try await skipToIndex(nextIndex)
     }
 
     /// 이전 곡
     func skipToPreviousEntry() async throws {
-        let currentQueue = queue.value
         let prevIndex = currentIndex.value - 1
         guard prevIndex >= 0 else { return }
-
-        if isPreviewMode {
-            previewPlayer.play(for: currentQueue[prevIndex])
-            previewPlayer.updateNowPlayingInfo(for: currentQueue[prevIndex], isPlaying: true)
-        } else {
-            try await player.skipToPreviousEntry()
-        }
-        currentIndex.accept(prevIndex)
-        currentMusic.accept(currentQueue[prevIndex])
-        playbackTime.accept(0)
-        print("[MusicService] 이전 곡 재생: \(currentQueue[prevIndex].title)")
+        try await skipToIndex(prevIndex)
     }
 
     // MARK: - 미리듣기 (PreviewPlayer)

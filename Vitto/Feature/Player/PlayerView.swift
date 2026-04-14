@@ -7,7 +7,7 @@ import UIKit
 import SnapKit
 import Kingfisher
 
-final class PlayerView: UIView {
+final class PlayerView: BaseView {
 
     // MARK: - Background
 
@@ -92,10 +92,31 @@ final class PlayerView: UIView {
         return lbl
     }()
 
+    // MARK: - Current Queue
+
+    let currentQueueButton: UIButton = {
+        let btn = UIButton(type: .system)
+        let cfg = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
+        btn.setImage(UIImage(systemName: "list.bullet", withConfiguration: cfg), for: .normal)
+        btn.tintColor = AppColor.onSurface
+        return btn
+    }()
+
+    let currentQueueTableView: UITableView = {
+        let tv = UITableView()
+        tv.backgroundColor = .clear
+        tv.separatorStyle = .none
+        tv.register(SearchResultCell.self, forCellReuseIdentifier: SearchResultCell.identifier)
+        tv.alpha = 0
+        tv.rowHeight = 64
+        return tv
+    }()
+
     // MARK: - Layout State
 
     private var isLandscapeLayout = false
     private var isSubscribed = true
+    private(set) var isCurrentQueueVisible = false
 
     // MARK: - Subscribe Banner
 
@@ -172,7 +193,7 @@ final class PlayerView: UIView {
     let playPauseButton: UIButton = {
         let btn = UIButton(type: .system)
         let cfg = UIImage.SymbolConfiguration(pointSize: 52, weight: .bold)
-        btn.setImage(UIImage(systemName: "play.fill", withConfiguration: cfg), for: .normal)
+        btn.setImage(UIImage(systemName: "play.circle.fill", withConfiguration: cfg), for: .normal)
         btn.tintColor = AppColor.primaryRose
         btn.layer.cornerRadius = 40
         btn.clipsToBounds = true
@@ -191,13 +212,8 @@ final class PlayerView: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setupHierarchy()
         setupGradient()
-        applyConstraints()
     }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError() }
 
     override func layoutSubviews() {
         super.layoutSubviews()
@@ -206,19 +222,21 @@ final class PlayerView: UIView {
         let landscape = bounds.width > bounds.height
         guard landscape != isLandscapeLayout else { return }
         isLandscapeLayout = landscape
-        applyConstraints()
+        setupConstraints()
     }
 
     // MARK: - Layout
 
-    private func setupHierarchy() {
+    override func setupHierarchy() {
         [backgroundImageView, backgroundBlurView, gradientOverlayView,
          closeButton, moreButton,
          artworkImageView,
          trackInfoStack,
          subscribeBannerButton,
          slider, currentTimeLabel, totalTimeLabel,
-         controlStack
+         controlStack,
+         currentQueueButton,
+         currentQueueTableView
         ].forEach { addSubview($0) }
 
         labelsStack.addArrangedSubview(titleLabel)
@@ -228,7 +246,7 @@ final class PlayerView: UIView {
         [prevButton, playPauseButton, nextButton].forEach { controlStack.addArrangedSubview($0) }
     }
 
-    private func applyConstraints() {
+    override func setupConstraints() {
         // 공통 배경 제약조건
         [backgroundImageView, backgroundBlurView, gradientOverlayView].forEach {
             $0.snp.remakeConstraints { $0.edges.equalToSuperview() }
@@ -246,7 +264,8 @@ final class PlayerView: UIView {
             $0.size.equalTo(44)
         }
 
-        playPauseButton.snp.remakeConstraints { $0.size.equalTo(80) }
+        let playPauseSize: CGFloat = (!isLandscapeLayout && isCurrentQueueVisible) ? 44 : 80
+        playPauseButton.snp.remakeConstraints { $0.size.equalTo(playPauseSize) }
 
         if isLandscapeLayout {
             applyLandscapeConstraints()
@@ -258,6 +277,15 @@ final class PlayerView: UIView {
     }
 
     private func applyPortraitConstraints() {
+        if isCurrentQueueVisible {
+            applyPortraitQueueConstraints()
+        } else {
+            applyPortraitDefaultConstraints()
+        }
+    }
+
+    /// 기존 레이아웃
+    private func applyPortraitDefaultConstraints() {
         artworkImageView.snp.remakeConstraints {
             $0.top.equalTo(closeButton.snp.bottom).offset(AppSpacing.xxl)
             $0.centerX.equalToSuperview()
@@ -275,34 +303,79 @@ final class PlayerView: UIView {
             $0.centerX.equalToSuperview()
         }
 
-        slider.snp.remakeConstraints {
-            sliderTopToBanner = $0.top.equalTo(subscribeBannerButton.snp.bottom).offset(AppSpacing.md).constraint
-            sliderTopToTrackInfo = $0.top.equalTo(trackInfoStack.snp.bottom).offset(AppSpacing.md).constraint
+        setupSliderConstraints(trackInfoAnchor: trackInfoStack.snp.bottom) {
             $0.horizontalEdges.equalToSuperview().inset(AppSpacing.xl)
-        }
-
-        currentTimeLabel.snp.remakeConstraints {
-            $0.top.equalTo(slider.snp.bottom).offset(AppSpacing.xs)
-            $0.leading.equalTo(slider)
-        }
-
-        totalTimeLabel.snp.remakeConstraints {
-            $0.top.equalTo(currentTimeLabel)
-            $0.trailing.equalTo(slider)
         }
 
         controlStack.snp.remakeConstraints {
             $0.top.equalTo(currentTimeLabel.snp.bottom).offset(AppSpacing.xl)
             $0.horizontalEdges.equalToSuperview().inset(AppSpacing.xl)
         }
+
+        currentQueueButton.snp.remakeConstraints {
+            $0.top.equalTo(controlStack.snp.bottom).offset(AppSpacing.lg)
+            $0.centerX.equalToSuperview()
+            $0.size.equalTo(44)
+        }
+
+        currentQueueTableView.snp.remakeConstraints {
+            $0.top.equalTo(currentQueueButton.snp.bottom)
+            $0.horizontalEdges.equalToSuperview()
+            $0.height.equalTo(0)
+        }
+    }
+
+    /// 재생목록 레이아웃
+    private func applyPortraitQueueConstraints() {
+        artworkImageView.snp.remakeConstraints {
+            $0.top.equalTo(closeButton.snp.bottom).offset(AppSpacing.md)
+            $0.leading.equalTo(safeAreaLayoutGuide).inset(AppSpacing.xl)
+            $0.width.equalToSuperview().multipliedBy(0.28)
+            $0.height.equalTo(artworkImageView.snp.width)
+        }
+
+        trackInfoStack.snp.remakeConstraints {
+            $0.top.equalTo(artworkImageView)
+            $0.leading.equalTo(artworkImageView.snp.trailing).offset(AppSpacing.md)
+            $0.trailing.equalTo(safeAreaLayoutGuide).inset(AppSpacing.xl)
+        }
+
+        controlStack.snp.remakeConstraints {
+            $0.top.equalTo(trackInfoStack.snp.bottom).offset(AppSpacing.sm)
+            $0.leading.equalTo(trackInfoStack)
+            $0.trailing.equalTo(trackInfoStack)
+        }
+
+        subscribeBannerButton.snp.remakeConstraints {
+            $0.top.equalTo(artworkImageView.snp.bottom).offset(AppSpacing.sm)
+            $0.centerX.equalToSuperview()
+        }
+
+        setupSliderConstraints(trackInfoAnchor: artworkImageView.snp.bottom, bannerOffset: AppSpacing.sm) {
+            $0.horizontalEdges.equalToSuperview().inset(AppSpacing.xl)
+        }
+
+        currentQueueButton.snp.remakeConstraints {
+            $0.top.equalTo(currentTimeLabel.snp.bottom).offset(AppSpacing.md)
+            $0.centerX.equalToSuperview()
+            $0.size.equalTo(44)
+        }
+
+        currentQueueTableView.snp.remakeConstraints {
+            $0.top.equalTo(currentQueueButton.snp.bottom).offset(AppSpacing.sm)
+            $0.horizontalEdges.equalToSuperview()
+            $0.bottom.equalTo(safeAreaLayoutGuide)
+        }
     }
 
     private func applyLandscapeConstraints() {
+        let artworkMultiplier: CGFloat = isCurrentQueueVisible ? 0.25 : 0.38
+
         artworkImageView.snp.remakeConstraints {
             $0.top.equalTo(closeButton.snp.bottom).offset(AppSpacing.md)
             $0.leading.equalTo(safeAreaLayoutGuide).inset(AppSpacing.xl)
             $0.bottom.lessThanOrEqualTo(safeAreaLayoutGuide).inset(AppSpacing.md)
-            $0.width.equalToSuperview().multipliedBy(0.38)
+            $0.width.equalToSuperview().multipliedBy(artworkMultiplier)
             $0.height.equalTo(artworkImageView.snp.width)
         }
 
@@ -317,27 +390,57 @@ final class PlayerView: UIView {
             $0.leading.equalTo(trackInfoStack)
         }
 
-        slider.snp.remakeConstraints {
-            sliderTopToBanner = $0.top.equalTo(subscribeBannerButton.snp.bottom).offset(AppSpacing.md).constraint
-            sliderTopToTrackInfo = $0.top.equalTo(trackInfoStack.snp.bottom).offset(AppSpacing.md).constraint
+        setupSliderConstraints(trackInfoAnchor: trackInfoStack.snp.bottom) {
             $0.leading.equalTo(trackInfoStack)
             $0.trailing.equalTo(safeAreaLayoutGuide).inset(AppSpacing.xl)
-        }
-
-        currentTimeLabel.snp.remakeConstraints {
-            $0.top.equalTo(slider.snp.bottom).offset(AppSpacing.xs)
-            $0.leading.equalTo(slider)
-        }
-
-        totalTimeLabel.snp.remakeConstraints {
-            $0.top.equalTo(currentTimeLabel)
-            $0.trailing.equalTo(slider)
         }
 
         controlStack.snp.remakeConstraints {
             $0.top.equalTo(currentTimeLabel.snp.bottom).offset(AppSpacing.lg)
             $0.leading.equalTo(trackInfoStack)
             $0.trailing.equalTo(safeAreaLayoutGuide).inset(AppSpacing.xl)
+        }
+
+        currentQueueButton.snp.remakeConstraints {
+            $0.top.equalTo(controlStack.snp.bottom).offset(AppSpacing.md)
+            $0.centerX.equalTo(controlStack)
+            $0.size.equalTo(44)
+        }
+
+        if isCurrentQueueVisible {
+            currentQueueTableView.snp.remakeConstraints {
+                $0.top.equalTo(currentQueueButton.snp.bottom).offset(AppSpacing.sm)
+                $0.leading.equalTo(trackInfoStack)
+                $0.trailing.equalTo(safeAreaLayoutGuide).inset(AppSpacing.xl)
+                $0.bottom.equalTo(safeAreaLayoutGuide)
+            }
+        } else {
+            currentQueueTableView.snp.remakeConstraints {
+                $0.top.equalTo(currentQueueButton.snp.bottom)
+                $0.leading.equalTo(trackInfoStack)
+                $0.trailing.equalTo(safeAreaLayoutGuide).inset(AppSpacing.xl)
+                $0.height.equalTo(0)
+            }
+        }
+    }
+
+    private func setupSliderConstraints(
+        trackInfoAnchor: ConstraintItem,
+        bannerOffset: CGFloat = AppSpacing.md,
+        makeHorizontal: (ConstraintMaker) -> Void
+    ) {
+        slider.snp.remakeConstraints {
+            sliderTopToBanner = $0.top.equalTo(subscribeBannerButton.snp.bottom).offset(bannerOffset).constraint
+            sliderTopToTrackInfo = $0.top.equalTo(trackInfoAnchor).offset(AppSpacing.md).constraint
+            makeHorizontal($0)
+        }
+        currentTimeLabel.snp.remakeConstraints {
+            $0.top.equalTo(slider.snp.bottom).offset(AppSpacing.xs)
+            $0.leading.equalTo(slider)
+        }
+        totalTimeLabel.snp.remakeConstraints {
+            $0.top.equalTo(currentTimeLabel)
+            $0.trailing.equalTo(slider)
         }
     }
 
@@ -385,6 +488,35 @@ final class PlayerView: UIView {
         isSubscribed = subscribed
         subscribeBannerButton.isHidden = subscribed
         applySubscribedConstraints()
+    }
+
+    func setCurrentQueueVisible(_ visible: Bool, animated: Bool) {
+        guard visible != isCurrentQueueVisible else { return }
+        isCurrentQueueVisible = visible
+
+        currentQueueButton.tintColor = visible ? AppColor.secondary : AppColor.onSurface
+        updateControlButtonStyles(compact: visible)
+
+        if animated {
+            setupConstraints()
+            UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.85, initialSpringVelocity: 0.5) {
+                self.currentQueueTableView.alpha = visible ? 1 : 0
+                self.layoutIfNeeded()
+            }
+        } else {
+            setupConstraints()
+            currentQueueTableView.alpha = visible ? 1 : 0
+        }
+    }
+
+    private func updateControlButtonStyles(compact: Bool) {
+        let playPauseSize: CGFloat = compact ? 44 : 80
+        playPauseButton.layer.cornerRadius = playPauseSize / 2
+
+        let prevNextPointSize: CGFloat = compact ? 18 : 24
+        let cfg = UIImage.SymbolConfiguration(pointSize: prevNextPointSize, weight: .medium)
+        prevButton.setImage(UIImage(systemName: "backward.fill", withConfiguration: cfg), for: .normal)
+        nextButton.setImage(UIImage(systemName: "forward.fill", withConfiguration: cfg), for: .normal)
     }
 
     func setPlayingState(_ isPlaying: Bool) {
