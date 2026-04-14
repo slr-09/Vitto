@@ -21,12 +21,17 @@ final class PlayerViewController: BaseViewController {
     // Pan-to-dismiss 제스처 참조
     private var panGesture: UIPanGestureRecognizer?
 
+    // 재생목록 데이터
+    private var queueItems: [Music] = []
+    private var queueCurrentIndex: Int = 0
+    private var isMovingRow = false
+
     // MARK: - Lifecycle
 
     override func loadView() {
         view = playerView
     }
-    
+
     // MARK: - Binding
 
     override func bind() {
@@ -121,20 +126,16 @@ final class PlayerViewController: BaseViewController {
 
         pan.rx.event
             .bind(with: self) { owner, gesture in
-                let translation = gesture.translation(in: owner.view)   // 터치해서 얼마나 이동했는지
-                let velocity = gesture.velocity(in: owner.view) // 손가락을 뗀 시점의 속도
-                
+                let translation = gesture.translation(in: owner.view)
+                let velocity = gesture.velocity(in: owner.view)
+
                 switch gesture.state {
                 case .changed:
-                    // 음수 차단 → 아래 방향으로만 드래그 허용
                     let offsetY = max(translation.y, 0)
-                    // frame 대신 transform으로 시각적 위치만 이동 (원위치 복귀 시 .identity로 복원 가능)
                     owner.view.transform = CGAffineTransform(translationX: 0, y: offsetY)
-                    // 화면 높이 대비 내린 비율(0.0~1.0)에 따라 opacity 감소 → dismiss 예고 효과
                     let progress = min(offsetY / owner.view.bounds.height, 1.0)
-                    // 내릴수록 흐려지도록
                     owner.view.layer.opacity = Float(1.0 - progress * 0.3)
-                    
+
                 case .ended, .cancelled:
                     if translation.y > 150 || velocity.y > 1000 {
                         owner.dismiss(animated: true)
@@ -144,7 +145,7 @@ final class PlayerViewController: BaseViewController {
                             owner.view.layer.opacity = 1
                         }
                     }
-                    
+
                 default:
                     break
                 }
@@ -156,6 +157,11 @@ final class PlayerViewController: BaseViewController {
 
     private func setupCurrentQueueToggle() {
         let musicService = MusicService.shared
+        let tableView = playerView.currentQueueTableView
+
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.isEditing = true
 
         // 버튼 탭 → 토글
         playerView.currentQueueButton.rx.tap
@@ -164,11 +170,10 @@ final class PlayerViewController: BaseViewController {
                 owner.playerView.setCurrentQueueVisible(newState, animated: true)
                 owner.panGesture?.isEnabled = !newState
 
-                // 큐가 열릴 때 현재 곡으로 스크롤
                 if newState {
                     let index = musicService.currentIndex.value
                     guard index < musicService.queue.value.count else { return }
-                    owner.playerView.currentQueueTableView.scrollToRow(
+                    tableView.scrollToRow(
                         at: IndexPath(row: index, section: 0),
                         at: .middle,
                         animated: false
@@ -177,23 +182,14 @@ final class PlayerViewController: BaseViewController {
             }
             .disposed(by: disposeBag)
 
-        // queue 또는 currentIndex 변경 시 테이블 갱신 (currentIndex도 트리거로 사용)
+        // queue 또는 currentIndex 변경 시 테이블 갱신
         Observable.combineLatest(musicService.queue, musicService.currentIndex)
-            .map { queue, _ in queue }
             .observe(on: MainScheduler.instance)
-            .bind(to: playerView.currentQueueTableView.rx.items(
-                cellIdentifier: SearchResultCell.identifier,
-                cellType: SearchResultCell.self
-            )) { [weak musicService] index, music, cell in
-                cell.configure(with: music)
-                cell.setCurrentlyPlaying(index == musicService?.currentIndex.value)
-            }
-            .disposed(by: disposeBag)
-
-        // 셀 탭 → 해당 곡으로 재생 전환
-        playerView.currentQueueTableView.rx.itemSelected
-            .bind(with: self) { _, indexPath in
-                Task { try? await musicService.skipToIndex(indexPath.row) }
+            .bind(with: self) { owner, pair in
+                owner.queueItems = pair.0
+                owner.queueCurrentIndex = pair.1
+                guard !owner.isMovingRow else { return }
+                tableView.reloadData()
             }
             .disposed(by: disposeBag)
     }
@@ -203,14 +199,12 @@ final class PlayerViewController: BaseViewController {
     private func setupSliderEvents() {
         let slider = playerView.slider
 
-        // 터치 시작 → isSeeking = true
         slider.rx.controlEvent(.touchDown)
             .bind(with: self) { owner, _ in
                 owner.isSeekingRelay.accept(true)
             }
             .disposed(by: disposeBag)
 
-        // 터치 종료 → seek 실행, isSeeking = false
         slider.rx.controlEvent([.touchUpInside, .touchUpOutside, .touchCancel])
             .map { slider.value }
             .bind(with: self) { owner, value in
@@ -218,5 +212,55 @@ final class PlayerViewController: BaseViewController {
                 owner.isSeekingRelay.accept(false)
             }
             .disposed(by: disposeBag)
+    }
+}
+
+// MARK: - UITableViewDataSource & UITableViewDelegate
+
+extension PlayerViewController: UITableViewDataSource, UITableViewDelegate {
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        queueItems.count
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(
+            withIdentifier: SearchResultCell.identifier, for: indexPath
+        ) as? SearchResultCell else { return UITableViewCell() }
+        cell.configure(with: queueItems[indexPath.row])
+        cell.setCurrentlyPlaying(indexPath.row == queueCurrentIndex)
+        cell.setQueueMode(true)
+        return cell
+    }
+
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat { 64 }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        Task { try? await MusicService.shared.skipToIndex(indexPath.row) }
+    }
+
+    // 편집 모드: 삭제 아이콘 숨김
+    func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath) -> UITableViewCell.EditingStyle {
+        .none
+    }
+
+    // 편집 모드: 셀 들여쓰기 방지
+    func tableView(_ tableView: UITableView, shouldIndentWhileEditingRowAt indexPath: IndexPath) -> Bool {
+        false
+    }
+
+    func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
+        true
+    }
+
+    func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        isMovingRow = true
+        let item = queueItems.remove(at: sourceIndexPath.row)
+        queueItems.insert(item, at: destinationIndexPath.row)
+        MusicService.shared.moveQueueItem(from: sourceIndexPath.row, to: destinationIndexPath.row)
+        DispatchQueue.main.async { [weak self, weak tableView] in
+            self?.isMovingRow = false
+            tableView?.reloadData()
+        }
     }
 }

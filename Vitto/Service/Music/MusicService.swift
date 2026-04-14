@@ -345,6 +345,37 @@ final class MusicService {
         print("[MusicService] 정지")
     }
 
+    /// 큐 내 항목 순서 변경
+    func moveQueueItem(from sourceIndex: Int, to destinationIndex: Int) {
+        guard sourceIndex != destinationIndex else { return }
+
+        var currentQueue = queue.value
+        guard sourceIndex < currentQueue.count, destinationIndex < currentQueue.count else { return }
+        let item = currentQueue.remove(at: sourceIndex)
+        currentQueue.insert(item, at: destinationIndex)
+
+        if !isPreviewMode, sourceIndex < cachedSongs.count, destinationIndex < cachedSongs.count {
+            let song = cachedSongs.remove(at: sourceIndex)
+            cachedSongs.insert(song, at: destinationIndex)
+        }
+
+        // currentIndex 재계산
+        let current = currentIndex.value
+        var newIndex = current
+        if sourceIndex == current {
+            newIndex = destinationIndex
+        } else if sourceIndex < current && destinationIndex >= current {
+            newIndex = current - 1
+        } else if sourceIndex > current && destinationIndex <= current {
+            newIndex = current + 1
+        }
+
+        queue.accept(currentQueue)
+        if newIndex != current {
+            currentIndex.accept(newIndex)
+        }
+    }
+
     /// 큐에서 특정 인덱스로 이동
     func skipToIndex(_ index: Int) async throws {
         let currentQueue = queue.value
