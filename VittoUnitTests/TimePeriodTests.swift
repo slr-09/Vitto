@@ -80,10 +80,13 @@ final class TimePeriodTests: XCTestCase {
         }
     }
 
-    /// 모든 케이스의 Apple Music 검색 키워드가 비어있지 않음.
-    func test_allCases_haveNonEmptySearchKeyword() {
+    /// 모든 케이스의 추천 우선 장르 목록이 비어있지 않고, 각 장르명도 빈 문자열이 아님.
+    func test_allCases_haveNonEmptyPreferredGenres() {
         for period in TimePeriod.allCases {
-            XCTAssertFalse(period.searchKeyword.isEmpty, "\(period)")
+            XCTAssertFalse(period.preferredGenres.isEmpty, "\(period)")
+            for genre in period.preferredGenres {
+                XCTAssertFalse(genre.isEmpty, "\(period) - \(genre)")
+            }
         }
     }
 
