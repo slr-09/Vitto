@@ -55,10 +55,13 @@ final class RecommendationService {
             .flatMap { [weak self] songs -> Observable<[Music]> in
                 guard let self else { return .just([]) }
 
-                if songs.count >= 7 { return .just(songs) }
+                let willFallback = songs.count < 10
+                print("[Weather Rec] category=\(weather), 기록=\(songs.count)곡, fallback=\(willFallback)")
+
+                if !willFallback { return .just(songs) }
 
                 return self.musicSearchService
-                    .searchCuratedPlaylistTracks(query: weather.searchKeyword, limit: limit)
+                    .searchMusic(query: weather.searchKeyword)
             }
     }
 }
