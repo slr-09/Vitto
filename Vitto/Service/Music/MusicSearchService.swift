@@ -49,26 +49,6 @@ final class MusicSearchService {
         }
     }
 
-    /// 키워드로 Apple Music 큐레이션 플레이리스트를 검색하고, 첫 번째 플레이리스트의 트랙을 반환
-    func searchCuratedPlaylistTracks(query: String, limit: Int = 20) -> Observable<[Music]> {
-        return .async {
-            var request = MusicCatalogSearchRequest(term: query, types: [MusicKit.Playlist.self])
-            request.limit = 1
-            let response = try await request.response()
-
-            guard let playlist = response.playlists.first else { return [] }
-
-            let detailedPlaylist = try await playlist.with([.tracks])
-
-            guard let tracks = detailedPlaylist.tracks else { return [] }
-
-            return tracks.prefix(limit).compactMap { track -> Music? in
-                guard case let .song(song) = track else { return nil }
-                return song.toMusic()
-            }
-        }
-    }
-
     /// Apple Music 글로벌 인기 차트를 가져옵니다.
     func fetchTopCharts(limit: Int = 100) -> Observable<[Music]> {
         return .async {
@@ -88,12 +68,14 @@ final class MusicSearchService {
             let countryCode = try await MusicDataRequest.currentCountryCode
             let url = URL(string: "https://api.music.apple.com/v1/catalog/\(countryCode)/genres")!
 
-            let request = MusicDataRequest(urlRequest: URLRequest(url: url))
+            var urlRequest = URLRequest(url: url)
+            urlRequest.setValue("ko-KR", forHTTPHeaderField: "Accept-Language")
+            let request = MusicDataRequest(urlRequest: urlRequest)
             let response = try await request.response()
             let genres = try JSONDecoder().decode(MusicItemCollection<Genre>.self, from: response.data)
 
             print("[MusicSearchService] 장르 조회 완료: \(genres.count)개")
-            dump(genres)
+            genres.forEach { print("  \($0.id.rawValue) | \($0.name)") }
 
             return Array(genres)
         }

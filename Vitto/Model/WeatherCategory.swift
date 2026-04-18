@@ -61,14 +61,15 @@ extension WeatherCategory {
     /// Apple Music 검색용 키워드 (청취 데이터 없을 때 fallback)
     var searchKeyword: String {
         switch self {
-        case .sunny:   return "Happy Sunny"
-        case .cloudy:  return "Mellow"
-        case .rainy:   return "Rainy Day"
-        case .snowy:   return "Winter Chill"
-        case .foggy:   return "Ambient"
-        case .stormy:  return "Intense"
-        case .extreme: return "Intense"
-        case .unknown: return "Chill"
+        case .sunny:   return "신나는 K-팝"
+        case .cloudy:  return "잔잔한 K-팝"
+        case .rainy:   return "비"
+        case .snowy:   return "겨울 K-팝"
+        case .foggy:   return "어쿠스틱"
+        case .stormy:  return "감성 발라드"
+        case .extreme: return "록"
+        case .unknown: return "K-팝"
         }
     }
+
 }

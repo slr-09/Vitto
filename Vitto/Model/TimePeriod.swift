@@ -46,15 +46,16 @@ extension TimePeriod {
         "\(periodDescription) 플리"
     }
 
-    /// Apple Music 검색용 키워드 (사용자 데이터 없을 때 fallback)
-    var searchKeyword: String {
+    /// 추천 우선 장르명 (GenreCacheService 의 캐시된 GenreInfo.name 과 매칭)
+    /// 첫 매칭 성공한 장르의 ID 로 차트 검색
+    var preferredGenres: [String] {
         switch self {
-        case .wakeUp:      return "Morning Coffee"
-        case .concentrate: return "Pure Focus"
-        case .refresh:     return "Feel Good"
-        case .commute:     return "Driving"
-        case .relax:       return "Chill"
-        case .midnight:    return "Sleep"
+        case .wakeUp:      return ["댄스", "K-Pop", "팝"]
+        case .concentrate: return ["일렉트로닉", "재즈", "클래식"]
+        case .refresh:     return ["K-Pop", "팝", "싱어송라이터"]
+        case .commute:     return ["얼터너티브", "싱어송라이터", "팝"]
+        case .relax:       return ["싱어송라이터", "재즈", "K-Pop"]
+        case .midnight:    return ["R&B/소울", "얼터너티브", "싱어송라이터"]
         }
     }
 
