@@ -26,6 +26,13 @@
 			remoteGlobalIDString = 231119052F83EE54003CF8F9;
 			remoteInfo = VittoWidgetExtension;
 		};
+		23F1D25F2F930FB4001E654E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 23EF9FB22F6E530D00CD87AF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 23EF9FB92F6E530D00CD87AF;
+			remoteInfo = Vitto;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -48,6 +55,7 @@
 		2311190A2F83EE54003CF8F9 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		2311191C2F83F7BE003CF8F9 /* VittoWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VittoWidgetExtension.entitlements; sourceTree = "<group>"; };
 		23EF9FBA2F6E530D00CD87AF /* Vitto.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Vitto.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		23F1D25B2F930FB4001E654E /* VittoUnitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VittoUnitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -94,6 +102,11 @@
 			path = Vitto;
 			sourceTree = "<group>";
 		};
+		23F1D25C2F930FB4001E654E /* VittoUnitTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = VittoUnitTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,6 +132,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		23F1D2582F930FB4001E654E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -137,6 +157,7 @@
 				2311191C2F83F7BE003CF8F9 /* VittoWidgetExtension.entitlements */,
 				23EF9FBC2F6E530D00CD87AF /* Vitto */,
 				2311190C2F83EE54003CF8F9 /* VittoWidget */,
+				23F1D25C2F930FB4001E654E /* VittoUnitTests */,
 				231119072F83EE54003CF8F9 /* Frameworks */,
 				23EF9FBB2F6E530D00CD87AF /* Products */,
 			);
@@ -147,6 +168,7 @@
 			children = (
 				23EF9FBA2F6E530D00CD87AF /* Vitto.app */,
 				231119062F83EE54003CF8F9 /* VittoWidgetExtension.appex */,
+				23F1D25B2F930FB4001E654E /* VittoUnitTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -207,6 +229,29 @@
 			productReference = 23EF9FBA2F6E530D00CD87AF /* Vitto.app */;
 			productType = "com.apple.product-type.application";
 		};
+		23F1D25A2F930FB4001E654E /* VittoUnitTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 23F1D2632F930FB4001E654E /* Build configuration list for PBXNativeTarget "VittoUnitTests" */;
+			buildPhases = (
+				23F1D2572F930FB4001E654E /* Sources */,
+				23F1D2582F930FB4001E654E /* Frameworks */,
+				23F1D2592F930FB4001E654E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				23F1D2602F930FB4001E654E /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				23F1D25C2F930FB4001E654E /* VittoUnitTests */,
+			);
+			name = VittoUnitTests;
+			packageProductDependencies = (
+			);
+			productName = VittoUnitTests;
+			productReference = 23F1D25B2F930FB4001E654E /* VittoUnitTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -222,6 +267,10 @@
 					};
 					23EF9FB92F6E530D00CD87AF = {
 						CreatedOnToolsVersion = 26.3;
+					};
+					23F1D25A2F930FB4001E654E = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = 23EF9FB92F6E530D00CD87AF;
 					};
 				};
 			};
@@ -247,6 +296,7 @@
 			targets = (
 				23EF9FB92F6E530D00CD87AF /* Vitto */,
 				231119052F83EE54003CF8F9 /* VittoWidgetExtension */,
+				23F1D25A2F930FB4001E654E /* VittoUnitTests */,
 			);
 		};
 /* End PBXProject section */
@@ -260,6 +310,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		23EF9FB82F6E530D00CD87AF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		23F1D2592F930FB4001E654E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -310,6 +367,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		23F1D2572F930FB4001E654E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -317,6 +381,11 @@
 			isa = PBXTargetDependency;
 			target = 231119052F83EE54003CF8F9 /* VittoWidgetExtension */;
 			targetProxy = 231119142F83EE56003CF8F9 /* PBXContainerItemProxy */;
+		};
+		23F1D2602F930FB4001E654E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 23EF9FB92F6E530D00CD87AF /* Vitto */;
+			targetProxy = 23F1D25F2F930FB4001E654E /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -599,6 +668,58 @@
 			};
 			name = Release;
 		};
+		23F1D2612F930FB4001E654E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZT27N85LQ5;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.siro.VittoUnitTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Vitto.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Vitto";
+			};
+			name = Debug;
+		};
+		23F1D2622F930FB4001E654E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZT27N85LQ5;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.siro.VittoUnitTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Vitto.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Vitto";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -625,6 +746,15 @@
 			buildConfigurations = (
 				23EF9FCE2F6E530F00CD87AF /* Debug */,
 				23EF9FCF2F6E530F00CD87AF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		23F1D2632F930FB4001E654E /* Build configuration list for PBXNativeTarget "VittoUnitTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				23F1D2612F930FB4001E654E /* Debug */,
+				23F1D2622F930FB4001E654E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
