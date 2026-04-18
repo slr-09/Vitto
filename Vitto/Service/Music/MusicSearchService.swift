@@ -68,7 +68,9 @@ final class MusicSearchService {
             let countryCode = try await MusicDataRequest.currentCountryCode
             let url = URL(string: "https://api.music.apple.com/v1/catalog/\(countryCode)/genres")!
 
-            let request = MusicDataRequest(urlRequest: URLRequest(url: url))
+            var urlRequest = URLRequest(url: url)
+            urlRequest.setValue("ko-KR", forHTTPHeaderField: "Accept-Language")
+            let request = MusicDataRequest(urlRequest: urlRequest)
             let response = try await request.response()
             let genres = try JSONDecoder().decode(MusicItemCollection<Genre>.self, from: response.data)
 
