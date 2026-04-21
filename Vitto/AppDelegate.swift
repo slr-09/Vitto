@@ -7,6 +7,7 @@
 
 import UIKit
 import Firebase
+import FirebaseAnalytics
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -18,6 +19,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         _ = PlaybackTracker.shared
         
         FirebaseApp.configure()
+        Analytics.setAnalyticsCollectionEnabled(true)
         
         return true
     }
