@@ -162,6 +162,7 @@ final class PlayerViewController: BaseViewController {
         tableView.dataSource = self
         tableView.delegate = self
         tableView.isEditing = true
+        tableView.allowsSelectionDuringEditing = true
 
         // 버튼 탭 → 토글
         playerView.currentQueueButton.rx.tap
