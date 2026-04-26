@@ -65,7 +65,7 @@ final class CoreDataStack {
         var genreCount: [String: Int] = [:]
         for record in records {
             guard let genres = record.music?.genres else { continue }
-            for genre in genres {
+            for genre in genres where genre != "Music" {
                 genreCount[genre, default: 0] += 1
             }
         }

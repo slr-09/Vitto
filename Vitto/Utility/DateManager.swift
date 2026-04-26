@@ -43,7 +43,7 @@ final class DateManager {
 
     /// 이번 주 월요일 00:00:00 반환 (ISO 8601 기준)
     func currentWeekStart() -> Date {
-        let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())
+        let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: daysAgo(30))
         return calendar.date(from: components) ?? Date()
     }
 
