@@ -69,6 +69,13 @@
 		23111A322F840FCC003CF8F9 /* Exceptions for "Vitto" folder in "VittoWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				"Resources/DesignSystem/Font/Manrope-Regular.ttf",
+				"Resources/DesignSystem/Font/Manrope-SemiBold.ttf",
+				"Resources/DesignSystem/Font/PlusJakartaSans-Bold.ttf",
+				"Resources/DesignSystem/Font/PlusJakartaSans-Medium.ttf",
+				"Resources/DesignSystem/Font/PlusJakartaSans-SemiBold.ttf",
+				"Resources/DesignSystem/Font/SpaceGrotesk-Bold.ttf",
+				"Resources/DesignSystem/Font/SpaceGrotesk-SemiBold.ttf",
 				Shared/SharedFileStorage.swift,
 				Shared/SharedModel.swift,
 				"Shared/SharedUserDefaults+.swift",
