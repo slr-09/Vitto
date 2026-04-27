@@ -57,16 +57,16 @@ final class MusicCardCell: UICollectionViewCell {
         containerView.snp.makeConstraints { $0.edges.equalToSuperview() }
 
         albumArtImageView.snp.makeConstraints {
-            $0.top.leading.trailing.equalToSuperview()
+            $0.top.horizontalEdges.equalToSuperview()
             $0.height.equalTo(containerView.snp.width)
         }
         titleLabel.snp.makeConstraints {
             $0.top.equalTo(albumArtImageView.snp.bottom).offset(AppSpacing.sm)
-            $0.leading.trailing.equalToSuperview().inset(AppSpacing.sm)
+            $0.horizontalEdges.equalToSuperview().inset(AppSpacing.sm)
         }
         subtitleLabel.snp.makeConstraints {
             $0.top.equalTo(titleLabel.snp.bottom).offset(4)
-            $0.leading.trailing.equalToSuperview().inset(AppSpacing.sm)
+            $0.horizontalEdges.equalToSuperview().inset(AppSpacing.sm)
             $0.bottom.lessThanOrEqualToSuperview().inset(AppSpacing.sm)
         }
     }

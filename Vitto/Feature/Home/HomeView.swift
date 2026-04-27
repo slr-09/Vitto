@@ -14,7 +14,7 @@ final class HomeView: BaseView {
     let heroSectionView = HeroSectionView()
 
     private let recommendedHeader = SectionHeaderView()
-    lazy var recommendedCollectionView = makeHorizontalCollectionView(itemSize: CGSize(width: 140, height: 185))
+    lazy var recommendedCollectionView = makeHorizontalCollectionView(itemSize: CGSize(width: 140, height: 200))
 
     let top100Header = SectionHeaderView()
     let top100PreviewTableView: SelfSizingTableView = {
