@@ -8,7 +8,7 @@ final class MusicCardCell: UICollectionViewCell {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFill
         iv.backgroundColor = AppColor.surfaceContainerHigh
-        iv.layer.cornerRadius = AppSpacing.Radius.sm
+//        iv.layer.cornerRadius = AppSpacing.Radius.sm
         iv.layer.masksToBounds = true
         return iv
     }()

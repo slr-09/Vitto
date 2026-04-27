@@ -60,7 +60,7 @@ final class HomeView: BaseView {
             $0.width.equalTo(scrollView)
         }
         recommendedCollectionView.snp.makeConstraints {
-            $0.height.equalTo(185)
+            $0.height.equalTo(200)
         }
     }
 
