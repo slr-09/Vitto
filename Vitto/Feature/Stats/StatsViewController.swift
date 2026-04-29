@@ -109,6 +109,7 @@ final class StatsViewController: BaseViewController {
         contentStack.setCustomSpacing(AppSpacing.md, after: totalTimeSectionLabel)
         contentStack.setCustomSpacing(AppSpacing.lg, after: totalTimeCard)
         contentStack.setCustomSpacing(AppSpacing.md, after: sectionLabel)
+        genreCard.isHidden = true
     }
 
     // MARK: - Bind

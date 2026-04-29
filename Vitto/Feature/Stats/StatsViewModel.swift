@@ -27,7 +27,7 @@ final class StatsViewModel: ViewModelType {
         let weekStart = Observable.merge(input.viewDidLoad, input.recordDidFinalize)
             .observe(on: MainScheduler.instance)
             .map { _ in DateManager.shared.currentWeekStart() }
-            .share()
+            .share(replay: 1)
 
         let topGenres = weekStart
             .map { date -> [GenreRankItem] in
