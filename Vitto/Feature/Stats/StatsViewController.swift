@@ -38,13 +38,7 @@ final class StatsViewController: BaseViewController {
         return view
     }()
 
-    private let totalTimeLabel: UILabel = {
-        let label = UILabel()
-        label.font = AppFont.displayLG
-        label.textColor = AppColor.onBackground
-        label.textAlignment = .center
-        return label
-    }()
+    private let totalTimeView = AnimatedTimeView()
 
     private let sectionLabel: UILabel = {
         let label = UILabel()
@@ -90,7 +84,7 @@ final class StatsViewController: BaseViewController {
         [titleLabel, totalTimeSectionLabel, totalTimeCard, sectionLabel, genreCard, emptyLabel].forEach {
             contentStack.addArrangedSubview($0)
         }
-        totalTimeCard.addSubview(totalTimeLabel)
+        totalTimeCard.addSubview(totalTimeView)
         genreCard.addSubview(genreStack)
     }
 
@@ -102,7 +96,7 @@ final class StatsViewController: BaseViewController {
             $0.edges.equalToSuperview().inset(AppSpacing.screenHorizontal)
             $0.width.equalToSuperview().offset(-AppSpacing.screenHorizontal * 2)
         }
-        totalTimeLabel.snp.makeConstraints {
+        totalTimeView.snp.makeConstraints {
             $0.edges.equalToSuperview().inset(AppSpacing.xl)
         }
         genreStack.snp.makeConstraints {
@@ -126,8 +120,10 @@ final class StatsViewController: BaseViewController {
         )
         let output = viewModel.transform(input: input)
 
-        output.totalListenedTime
-            .drive(totalTimeLabel.rx.text)
+        output.totalListenedMs
+            .drive(onNext: { [weak self] ms in
+                self?.totalTimeView.update(to: ms)
+            })
             .disposed(by: disposeBag)
 
         output.topGenres

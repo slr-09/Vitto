@@ -20,7 +20,7 @@ final class StatsViewModel: ViewModelType {
     struct Output {
         let topGenres: Driver<[GenreRankItem]>
         let weekRange: Driver<String>
-        let totalListenedTime: Driver<String>
+        let totalListenedMs: Driver<Int>
     }
 
     func transform(input: Input) -> Output {
@@ -49,20 +49,10 @@ final class StatsViewModel: ViewModelType {
             .map { _ in DateManager.shared.currentWeekRangeString() }
             .asDriver(onErrorJustReturn: "")
 
-        let totalListenedTime = weekStart
-            .map { date -> String in
-                let ms = CoreDataStack.shared.fetchTotalListenedDurationMs(since: date)
-                let totalSeconds = ms / 1_000
-                if totalSeconds < 60 { return "\(totalSeconds)초" }
-                let totalMinutes = totalSeconds / 60
-                let hours = totalMinutes / 60
-                let minutes = totalMinutes % 60
-                if hours == 0 { return "\(minutes)분" }
-                if minutes == 0 { return "\(hours)시간" }
-                return "\(hours)시간 \(minutes)분"
-            }
-            .asDriver(onErrorJustReturn: "-")
+        let totalListenedMs = weekStart
+            .map { date in CoreDataStack.shared.fetchTotalListenedDurationMs(since: date) }
+            .asDriver(onErrorJustReturn: 0)
 
-        return Output(topGenres: topGenres, weekRange: weekRange, totalListenedTime: totalListenedTime)
+        return Output(topGenres: topGenres, weekRange: weekRange, totalListenedMs: totalListenedMs)
     }
 }
