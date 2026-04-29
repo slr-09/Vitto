@@ -55,6 +55,14 @@ final class CoreDataStack {
         persistentContainer.newBackgroundContext()
     }
 
+    /// 이번 주 총 청취 시간(ms) 합산
+    func fetchTotalListenedDurationMs(since date: Date) -> Int {
+        let request = NSFetchRequest<PlaybackRecord>(entityName: "PlaybackRecord")
+        request.predicate = NSPredicate(format: "startedAt >= %@", date as NSDate)
+        guard let records = try? context.fetch(request) else { return 0 }
+        return records.reduce(0) { $0 + Int($1.listenedDurationMs) }
+    }
+
     /// 이번 주 재생 기록에서 장르별 재생 횟수를 집계해 상위 N개 반환
     func fetchTopGenres(since date: Date, limit: Int) -> [(name: String, count: Int)] {
         let request = NSFetchRequest<PlaybackRecord>(entityName: "PlaybackRecord")

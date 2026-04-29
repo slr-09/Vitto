@@ -1,9 +1,13 @@
 import CoreData
 import RxSwift
+import RxCocoa
 
 final class PlaybackRecordService {
 
     static let shared = PlaybackRecordService()
+
+    var recordFinalized: Observable<Void> { _recordFinalized.asObservable() }
+    private let _recordFinalized = PublishRelay<Void>()
 
     private let stack = CoreDataStack.shared
     private let weatherService = WeatherService.shared
@@ -65,6 +69,7 @@ final class PlaybackRecordService {
         }
 
         stack.saveContext()
+        _recordFinalized.accept(())
     }
 
     // MARK: - 쿼리: 무드 기반

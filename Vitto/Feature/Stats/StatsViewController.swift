@@ -23,6 +23,29 @@ final class StatsViewController: BaseViewController {
         return label
     }()
 
+    private let totalTimeSectionLabel: UILabel = {
+        let label = UILabel()
+        label.text = "이번 주 총 들은 시간"
+        label.font = AppFont.h4
+        label.textColor = AppColor.onSurfaceVariant
+        return label
+    }()
+
+    private let totalTimeCard: UIView = {
+        let view = UIView()
+        view.layer.cornerRadius = AppSpacing.Radius.lg
+        view.backgroundColor = AppColor.surfaceVariant.withAlphaComponent(0.4)
+        return view
+    }()
+
+    private let totalTimeLabel: UILabel = {
+        let label = UILabel()
+        label.font = AppFont.displayLG
+        label.textColor = AppColor.onBackground
+        label.textAlignment = .center
+        return label
+    }()
+
     private let sectionLabel: UILabel = {
         let label = UILabel()
         label.text = "이번 주 많이 들은 장르"
@@ -64,9 +87,10 @@ final class StatsViewController: BaseViewController {
     override func setupHierarchy() {
         view.addSubview(scrollView)
         scrollView.addSubview(contentStack)
-        [titleLabel, sectionLabel, genreCard, emptyLabel].forEach {
+        [titleLabel, totalTimeSectionLabel, totalTimeCard, sectionLabel, genreCard, emptyLabel].forEach {
             contentStack.addArrangedSubview($0)
         }
+        totalTimeCard.addSubview(totalTimeLabel)
         genreCard.addSubview(genreStack)
     }
 
@@ -78,6 +102,9 @@ final class StatsViewController: BaseViewController {
             $0.edges.equalToSuperview().inset(AppSpacing.screenHorizontal)
             $0.width.equalToSuperview().offset(-AppSpacing.screenHorizontal * 2)
         }
+        totalTimeLabel.snp.makeConstraints {
+            $0.edges.equalToSuperview().inset(AppSpacing.xl)
+        }
         genreStack.snp.makeConstraints {
             $0.edges.equalToSuperview().inset(AppSpacing.xl)
         }
@@ -85,14 +112,23 @@ final class StatsViewController: BaseViewController {
 
     override func setupStyles() {
         contentStack.setCustomSpacing(AppSpacing.xs, after: titleLabel)
+        contentStack.setCustomSpacing(AppSpacing.md, after: totalTimeSectionLabel)
+        contentStack.setCustomSpacing(AppSpacing.lg, after: totalTimeCard)
         contentStack.setCustomSpacing(AppSpacing.md, after: sectionLabel)
     }
 
     // MARK: - Bind
 
     override func bind() {
-        let input = StatsViewModel.Input(viewDidLoad: Observable.just(()))
+        let input = StatsViewModel.Input(
+            viewDidLoad: Observable.just(()),
+            recordDidFinalize: PlaybackRecordService.shared.recordFinalized.asObservable()
+        )
         let output = viewModel.transform(input: input)
+
+        output.totalListenedTime
+            .drive(totalTimeLabel.rx.text)
+            .disposed(by: disposeBag)
 
         output.topGenres
             .drive(onNext: { [weak self] items in
