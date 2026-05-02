@@ -314,6 +314,7 @@ final class PlayerView: BaseView {
 
         currentQueueButton.snp.remakeConstraints {
             $0.top.equalTo(controlStack.snp.bottom).offset(AppSpacing.lg)
+            $0.bottom.lessThanOrEqualTo(safeAreaLayoutGuide).inset(AppSpacing.sm)
             $0.centerX.equalToSuperview()
             $0.size.equalTo(44)
         }
