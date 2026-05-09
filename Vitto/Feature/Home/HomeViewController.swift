@@ -27,8 +27,12 @@ final class HomeViewController: BaseViewController {
     override func bind() {
         LocationService.shared.requestWhenInUseAuthorization()
 
-        // viewDidLoad가 호출된 시점에 바인딩하므로 Observable.just(())로 즉시 이벤트를 발생시킵니다.
-        let viewDidLoadTrigger = Observable.just(())
+        // 이미 권한이 있으면 즉시 시작
+        // 없으면 즉시(빈 결과) + auth 완료 시 재시작 — flatMapLatest가 두 번째 emit에 덮어씀
+        let auth = MusicAuthService.shared
+        let viewDidLoadTrigger: Observable<Void> = auth.isAuthorized
+            ? Observable.just(())
+            : Observable.merge(Observable.just(()), auth.authorizationReady)
         
         let input = HomeViewModel.Input(
             viewDidLoad: viewDidLoadTrigger,
@@ -37,6 +41,24 @@ final class HomeViewController: BaseViewController {
         
         let output = viewModel.transform(input: input)
         
+        output.isHeroLoading
+            .drive(onNext: { [weak self] isLoading in
+                self?.homeView.heroSkeletonView.isHidden = !isLoading
+            })
+            .disposed(by: disposeBag)
+
+        output.isRecommendedLoading
+            .drive(onNext: { [weak self] isLoading in
+                self?.homeView.recommendedSkeletonView.isHidden = !isLoading
+            })
+            .disposed(by: disposeBag)
+
+        output.isTopSongsLoading
+            .drive(onNext: { [weak self] isLoading in
+                self?.homeView.top100SkeletonView.isHidden = !isLoading
+            })
+            .disposed(by: disposeBag)
+
         output.heroMood
             .drive(onNext: { [weak self] mood in
                 self?.homeView.heroSectionView.configure(mood: mood)
@@ -78,14 +100,10 @@ final class HomeViewController: BaseViewController {
             tabBar.deepLinkRelay
                 .compactMap { $0 }
                 .filter { $0 == .top100 }
-                .flatMapLatest { _ in output.topSongs.asObservable().take(1) }
-                .bind(with: self) { owner, songs in
+                .bind(with: self) { owner, _ in
                     tabBar.deepLinkRelay.accept(nil)
-                    
-                    // Top 100 이미 떠 있을 때
                     guard !(owner.navigationController?.topViewController is Top100DetailViewController) else { return }
-                    
-                    let detailVC = Top100DetailViewController(songs: songs)
+                    let detailVC = Top100DetailViewController()
                     owner.navigationController?.pushViewController(detailVC, animated: true)
                 }
                 .disposed(by: disposeBag)
@@ -122,9 +140,8 @@ final class HomeViewController: BaseViewController {
             .disposed(by: disposeBag)
 
         homeView.top100Header.moreButton.rx.tap
-            .withLatestFrom(output.topSongs)
-            .bind(with: self) { owner, songs in
-                let detailVC = Top100DetailViewController(songs: songs)
+            .bind(with: self) { owner, _ in
+                let detailVC = Top100DetailViewController()
                 owner.navigationController?.pushViewController(detailVC, animated: true)
             }
             .disposed(by: disposeBag)
