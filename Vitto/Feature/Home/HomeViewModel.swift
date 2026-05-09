@@ -17,6 +17,9 @@ final class HomeViewModel: ViewModelType {
         let heroMoodSongs: Driver<[Music]>
         let weatherAttribution: Driver<WeatherAttributionInfo?>
         let topSongs: Driver<[Music]>
+        let isHeroLoading: Driver<Bool>
+        let isRecommendedLoading: Driver<Bool>
+        let isTopSongsLoading: Driver<Bool>
     }
 
     private let disposeBag = DisposeBag()
@@ -27,10 +30,15 @@ final class HomeViewModel: ViewModelType {
         let period = TimePeriod.current
         let tracker = PlaybackTracker.shared
 
+        let isHeroLoadingRelay = BehaviorRelay<Bool>(value: true)
+        let isRecommendedLoadingRelay = BehaviorRelay<Bool>(value: true)
+        let isTopSongsLoadingRelay = BehaviorRelay<Bool>(value: true)
+
         let mood = input.viewDidLoad
             .flatMapLatest { _ in tracker.currentMood }
+            .do(onNext: { _ in isHeroLoadingRelay.accept(false) })
             .asDriver(onErrorJustReturn: .sunny)
-            
+
         let heroSongs = mood.asObservable()
             .flatMapLatest { [weak self] currentMood -> Observable<[Music]> in
                 guard let self else { return .just([]) }
@@ -47,6 +55,7 @@ final class HomeViewModel: ViewModelType {
                     .recommendationsForCurrentTimePeriod(limit: 10)
                     .catchAndReturn([])
             }
+            .do(onNext: { _ in isRecommendedLoadingRelay.accept(false) })
             .asDriver(onErrorJustReturn: [])
 
         let sectionTitle = input.viewDidLoad
@@ -64,9 +73,10 @@ final class HomeViewModel: ViewModelType {
 
         let topSongs = input.viewDidLoad
             .flatMapLatest {
-                MusicSearchService.shared.fetchTopCharts(limit: 100)
+                MusicSearchService.shared.fetchTopCharts(limit: 25)
                     .catchAndReturn([])
             }
+            .do(onNext: { _ in isTopSongsLoadingRelay.accept(false) })
             .do { songs in
                 let topSongs = Array(songs.prefix(5))
                 let top100 = topSongs.enumerated().map { index, song in
@@ -99,7 +109,10 @@ final class HomeViewModel: ViewModelType {
             heroMood: mood,
             heroMoodSongs: heroSongs,
             weatherAttribution: attribution,
-            topSongs: topSongs
+            topSongs: topSongs,
+            isHeroLoading: isHeroLoadingRelay.asDriver(),
+            isRecommendedLoading: isRecommendedLoadingRelay.asDriver(),
+            isTopSongsLoading: isTopSongsLoadingRelay.asDriver()
         )
     }
 }

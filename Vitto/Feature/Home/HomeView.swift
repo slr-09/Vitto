@@ -12,11 +12,14 @@ final class HomeView: BaseView {
     }()
 
     let heroSectionView = HeroSectionView()
+    let heroSkeletonView = HeroSkeletonView()
 
     private let recommendedHeader = SectionHeaderView()
     lazy var recommendedCollectionView = makeHorizontalCollectionView(itemSize: CGSize(width: 140, height: 200))
+    let recommendedSkeletonView = RecommendedSkeletonView()
 
     let top100Header = SectionHeaderView()
+    let top100SkeletonView = Top100SkeletonView()
     let top100PreviewTableView: SelfSizingTableView = {
         let tv = SelfSizingTableView()
         tv.backgroundColor = .clear
@@ -47,6 +50,10 @@ final class HomeView: BaseView {
         let top100Section = makeTop100SectionContainer()
 
         [heroSectionView, recommendedSection, top100Section].forEach { contentStack.addArrangedSubview($0) }
+
+        // 스켈레톤 오버레이
+        heroSectionView.addSubview(heroSkeletonView)
+        heroSkeletonView.snp.makeConstraints { $0.edges.equalToSuperview() }
     }
 
     override func setupConstraints() {
@@ -80,7 +87,7 @@ final class HomeView: BaseView {
 
     private func makeTop100SectionContainer() -> UIView {
         let container = UIView()
-        [top100Header, top100PreviewTableView].forEach { container.addSubview($0) }
+        [top100Header, top100PreviewTableView, top100SkeletonView].forEach { container.addSubview($0) }
         top100Header.snp.makeConstraints {
             $0.top.equalToSuperview()
             $0.horizontalEdges.equalToSuperview().inset(AppSpacing.screenHorizontal)
@@ -89,12 +96,17 @@ final class HomeView: BaseView {
             $0.top.equalTo(top100Header.snp.bottom).offset(AppSpacing.sm)
             $0.horizontalEdges.bottom.equalToSuperview()
         }
+        top100SkeletonView.snp.makeConstraints {
+            $0.top.equalTo(top100Header.snp.bottom).offset(AppSpacing.sm)
+            $0.horizontalEdges.equalToSuperview()
+            $0.height.equalTo(64 * 5)
+        }
         return container
     }
 
     private func makeSectionContainer(header: SectionHeaderView, collection: UICollectionView) -> UIView {
         let container = UIView()
-        [header, collection].forEach { container.addSubview($0) }
+        [header, collection, recommendedSkeletonView].forEach { container.addSubview($0) }
         header.snp.makeConstraints {
             $0.top.equalToSuperview()
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
@@ -103,6 +115,9 @@ final class HomeView: BaseView {
         collection.snp.makeConstraints {
             $0.top.equalTo(header.snp.bottom).offset(AppSpacing.sm)
             $0.leading.trailing.bottom.equalToSuperview()
+        }
+        recommendedSkeletonView.snp.makeConstraints {
+            $0.edges.equalTo(collection)
         }
         return container
     }
