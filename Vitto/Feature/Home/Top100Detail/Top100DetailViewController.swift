@@ -5,10 +5,10 @@ import RxCocoa
 final class Top100DetailViewController: BaseViewController {
 
     private let detailView = PlaylistDetailView()
-    private let viewModel: Top100DetailViewModel
+    private let viewModel = Top100DetailViewModel()
+    private let loadMoreRelay = PublishRelay<Void>()
 
-    init(songs: [Music]) {
-        self.viewModel = Top100DetailViewModel(songs: songs)
+    init() {
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -31,14 +31,18 @@ final class Top100DetailViewController: BaseViewController {
         titleLabel.textColor = AppColor.onBackground
         titleLabel.textAlignment = .center
         navigationItem.titleView = titleLabel
+
+        let footer = UIActivityIndicatorView(style: .medium)
+        footer.color = AppColor.onSurfaceVariant
+        footer.frame = CGRect(x: 0, y: 0, width: detailView.tableView.bounds.width, height: 48)
+        detailView.tableView.tableFooterView = footer
     }
 
     override func bind() {
-        let itemSelected = detailView.tableView.rx.modelSelected(Music.self).asObservable()
-
         let input = Top100DetailViewModel.Input(
             viewDidLoad: Observable.just(()),
-            itemSelected: itemSelected
+            itemSelected: detailView.tableView.rx.modelSelected(Music.self).asObservable(),
+            loadMore: loadMoreRelay.asObservable()
         )
 
         let output = viewModel.transform(input: input)
@@ -60,6 +64,22 @@ final class Top100DetailViewController: BaseViewController {
             .drive(onNext: { [weak self] songs in
                 self?.detailView.updateEmptyState(isEmpty: songs.isEmpty)
             })
+            .disposed(by: disposeBag)
+
+        output.isLoadingMore
+            .drive(onNext: { [weak self] isLoading in
+                guard let footer = self?.detailView.tableView.tableFooterView as? UIActivityIndicatorView else { return }
+                isLoading ? footer.startAnimating() : footer.stopAnimating()
+            })
+            .disposed(by: disposeBag)
+
+        detailView.tableView.rx.willDisplayCell
+            .subscribe(with: self) { owner, event in
+                let (_, indexPath) = event
+                let totalRows = owner.detailView.tableView.numberOfRows(inSection: 0)
+                guard totalRows > 0, indexPath.row >= totalRows - 3 else { return }
+                owner.loadMoreRelay.accept(())
+            }
             .disposed(by: disposeBag)
     }
 }

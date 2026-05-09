@@ -50,14 +50,15 @@ final class MusicSearchService {
     }
 
     /// Apple Music 글로벌 인기 차트를 가져옵니다.
-    func fetchTopCharts(limit: Int = 100) -> Observable<[Music]> {
+    func fetchTopCharts(limit: Int = 25, offset: Int = 0) -> Observable<[Music]> {
         return .async {
             var request = MusicCatalogChartsRequest(types: [Song.self])
             request.limit = limit
+            request.offset = offset
             let response = try await request.response()
 
             let songs = (response.songCharts.first?.items ?? []).map { $0.toMusic() }
-            print("[MusicSearchService] Top Charts 조회 완료: \(songs.count)곡")
+            print("[MusicSearchService] Top Charts 조회 완료: offset=\(offset), \(songs.count)곡")
             return songs
         }
     }

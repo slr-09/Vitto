@@ -7,39 +7,78 @@ final class Top100DetailViewModel: ViewModelType {
     struct Input {
         let viewDidLoad: Observable<Void>
         let itemSelected: Observable<Music>
+        let loadMore: Observable<Void>
     }
 
     struct Output {
         let songs: Driver<[Music]>
+        let isLoadingMore: Driver<Bool>
     }
 
     private let disposeBag = DisposeBag()
-    private let songs: [Music]
+    private let pageSize = 25
 
-    init(songs: [Music]) {
-        self.songs = songs
-    }
+    private let allSongs = BehaviorRelay<[Music]>(value: [])
+    private let isLoadingRelay = BehaviorRelay<Bool>(value: false)
+    private var currentOffset = 0
+    private var hasMore = true
 
     func transform(input: Input) -> Output {
-        let songsDriver = input.viewDidLoad
-            .map { [songs] _ in songs }
-            .asDriver(onErrorJustReturn: [])
+        input.viewDidLoad
+            .flatMapLatest { [weak self] _ -> Observable<[Music]> in
+                guard let self else { return .just([]) }
+                return self.fetchNextPage()
+            }
+            .subscribe(with: self) { owner, newSongs in
+                owner.allSongs.accept(owner.allSongs.value + newSongs)
+            }
+            .disposed(by: disposeBag)
+
+        input.loadMore
+            .filter { [weak self] in
+                guard let self else { return false }
+                return !self.isLoadingRelay.value && self.hasMore
+            }
+            .flatMapLatest { [weak self] _ -> Observable<[Music]> in
+                guard let self else { return .just([]) }
+                return self.fetchNextPage()
+            }
+            .subscribe(with: self) { owner, newSongs in
+                owner.allSongs.accept(owner.allSongs.value + newSongs)
+            }
+            .disposed(by: disposeBag)
 
         input.itemSelected
-            .withLatestFrom(songsDriver.asObservable()) { selected, allSongs in
-                (allSongs, selected)
-            }
+            .withLatestFrom(allSongs.asObservable()) { selected, songs in (songs, selected) }
             .flatMapLatest { allSongs, selected in
                 let startIndex = allSongs.firstIndex(where: { $0.musicID == selected.musicID }) ?? 0
                 return MusicService.shared.playQueue(musics: allSongs, startIndex: startIndex)
-                    .catch { error in
-                        print("재생 에러: \(error)")
-                        return .empty()
-                    }
+                    .catch { _ in .empty() }
             }
             .subscribe()
             .disposed(by: disposeBag)
 
-        return Output(songs: songsDriver)
+        return Output(
+            songs: allSongs.asDriver(),
+            isLoadingMore: isLoadingRelay.asDriver()
+        )
+    }
+
+    private func fetchNextPage() -> Observable<[Music]> {
+        guard !isLoadingRelay.value, hasMore else { return .just([]) }
+        isLoadingRelay.accept(true)
+        let offset = currentOffset
+        return MusicSearchService.shared.fetchTopCharts(limit: pageSize, offset: offset)
+            .do(
+                onNext: { [weak self] songs in
+                    guard let self else { return }
+                    self.currentOffset += songs.count
+                    self.hasMore = songs.count >= self.pageSize
+                    self.isLoadingRelay.accept(false)
+                },
+                onError: { [weak self] _ in
+                    self?.isLoadingRelay.accept(false)
+                }
+            )
     }
 }
