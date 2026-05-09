@@ -17,6 +17,7 @@ final class Top100DetailViewModel: ViewModelType {
 
     private let disposeBag = DisposeBag()
     private let pageSize = 25
+    private let totalLimit = 100
 
     private let allSongs = BehaviorRelay<[Music]>(value: [])
     private let isLoadingRelay = BehaviorRelay<Bool>(value: false)
@@ -68,12 +69,14 @@ final class Top100DetailViewModel: ViewModelType {
         guard !isLoadingRelay.value, hasMore else { return .just([]) }
         isLoadingRelay.accept(true)
         let offset = currentOffset
-        return MusicSearchService.shared.fetchTopCharts(limit: pageSize, offset: offset)
+        let remaining = totalLimit - currentOffset
+        let limit = min(pageSize, remaining)
+        return MusicSearchService.shared.fetchTopCharts(limit: limit, offset: offset)
             .do(
                 onNext: { [weak self] songs in
                     guard let self else { return }
                     self.currentOffset += songs.count
-                    self.hasMore = songs.count >= self.pageSize
+                    self.hasMore = songs.count >= limit && self.currentOffset < self.totalLimit
                     self.isLoadingRelay.accept(false)
                 },
                 onError: { [weak self] _ in
