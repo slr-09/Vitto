@@ -55,37 +55,6 @@ final class CoreDataStack {
         persistentContainer.newBackgroundContext()
     }
 
-    /// 이번 주 총 청취 시간(ms) 합산
-    func fetchTotalListenedDurationMs(since date: Date) -> Int {
-        let request = NSFetchRequest<PlaybackRecord>(entityName: "PlaybackRecord")
-        request.predicate = NSPredicate(format: "startedAt >= %@", date as NSDate)
-        guard let records = try? context.fetch(request) else { return 0 }
-        return records.reduce(0) { $0 + Int($1.listenedDurationMs) }
-    }
-
-    /// 이번 주 재생 기록에서 장르별 재생 횟수를 집계해 상위 N개 반환
-    func fetchTopGenres(since date: Date, limit: Int) -> [(name: String, count: Int)] {
-        let request = NSFetchRequest<PlaybackRecord>(entityName: "PlaybackRecord")
-        request.predicate = NSPredicate(format: "startedAt >= %@ AND isSkipped == NO", date as NSDate)
-
-        guard let records = try? context.fetch(request) else { return [] }
-
-        var genreCount: [String: Int] = [:]
-        for record in records {
-            guard let genres = record.music?.genres else { continue }
-            for genre in genres {
-                let trimmedGenre = genre.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !["Music", "음악"].contains(trimmedGenre) else { continue }
-                genreCount[trimmedGenre, default: 0] += 1
-            }
-        }
-
-        return genreCount
-            .sorted { $0.value > $1.value }
-            .prefix(limit)
-            .map { (name: $0.key, count: $0.value) }
-    }
-
     // MARK: - Programmatic CoreData Model
 
     private static var managedObjectModel: NSManagedObjectModel = {

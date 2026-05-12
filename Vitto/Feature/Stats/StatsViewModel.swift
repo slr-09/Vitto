@@ -12,6 +12,8 @@ struct GenreRankItem {
 
 final class StatsViewModel: ViewModelType {
 
+    private let statsService = StatsService.shared
+
     struct Input {
         let viewDidLoad: Observable<Void>
         let recordDidFinalize: Observable<Void>
@@ -21,17 +23,21 @@ final class StatsViewModel: ViewModelType {
         let topGenres: Driver<[GenreRankItem]>
         let weekRange: Driver<String>
         let totalListenedMs: Driver<Int>
+        let streakDays: Driver<Int>
     }
 
     func transform(input: Input) -> Output {
-        let weekStart = Observable.merge(input.viewDidLoad, input.recordDidFinalize)
+        let refresh = Observable.merge(input.viewDidLoad, input.recordDidFinalize)
             .observe(on: MainScheduler.instance)
+            .share(replay: 1)
+
+        let weekStart = refresh
             .map { _ in DateManager.shared.currentWeekStart() }
             .share(replay: 1)
 
         let topGenres = weekStart
-            .map { date -> [GenreRankItem] in
-                let pairs = CoreDataStack.shared.fetchTopGenres(since: date, limit: Int.max)
+            .map { [statsService] date -> [GenreRankItem] in
+                let pairs = statsService.topGenres(since: date, limit: Int.max)
                 let total = pairs.reduce(0) { $0 + $1.count }
                 guard total > 0 else { return [] }
 
@@ -60,9 +66,18 @@ final class StatsViewModel: ViewModelType {
             .asDriver(onErrorJustReturn: "")
 
         let totalListenedMs = weekStart
-            .map { date in CoreDataStack.shared.fetchTotalListenedDurationMs(since: date) }
+            .map { [statsService] date in statsService.totalListenedDurationMs(since: date) }
             .asDriver(onErrorJustReturn: 0)
 
-        return Output(topGenres: topGenres, weekRange: weekRange, totalListenedMs: totalListenedMs)
+        let streakDays = refresh
+            .map { [statsService] _ in statsService.currentListeningStreakDays() }
+            .asDriver(onErrorJustReturn: 0)
+
+        return Output(
+            topGenres: topGenres,
+            weekRange: weekRange,
+            totalListenedMs: totalListenedMs,
+            streakDays: streakDays
+        )
     }
 }
