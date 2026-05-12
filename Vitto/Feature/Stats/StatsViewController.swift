@@ -55,12 +55,7 @@ final class StatsViewController: BaseViewController {
         return view
     }()
 
-    private let genreStack: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .vertical
-        stack.spacing = AppSpacing.lg
-        return stack
-    }()
+    private let genreBubbleChartView = GenreBubbleChartView()
 
     private let emptyLabel: UILabel = {
         let label = UILabel()
@@ -85,7 +80,7 @@ final class StatsViewController: BaseViewController {
             contentStack.addArrangedSubview($0)
         }
         totalTimeCard.addSubview(totalTimeView)
-        genreCard.addSubview(genreStack)
+        genreCard.addSubview(genreBubbleChartView)
     }
 
     override func setupConstraints() {
@@ -99,8 +94,9 @@ final class StatsViewController: BaseViewController {
         totalTimeView.snp.makeConstraints {
             $0.edges.equalToSuperview().inset(AppSpacing.xl)
         }
-        genreStack.snp.makeConstraints {
-            $0.edges.equalToSuperview().inset(AppSpacing.xl)
+        genreBubbleChartView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+            $0.height.equalTo(300)
         }
     }
 
@@ -137,100 +133,8 @@ final class StatsViewController: BaseViewController {
     // MARK: - Render
 
     private func renderGenreRows(_ items: [GenreRankItem]) {
-        genreStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
         genreCard.isHidden = items.isEmpty
         emptyLabel.isHidden = !items.isEmpty
-
-        for item in items {
-            let row = GenreRankRowView()
-            row.configure(with: item)
-            genreStack.addArrangedSubview(row)
-        }
-    }
-}
-
-// MARK: - GenreRankRowView
-
-private final class GenreRankRowView: BaseView {
-
-    private let nameLabel: UILabel = {
-        let label = UILabel()
-        label.font = AppFont.h2
-        label.textColor = AppColor.onBackground
-        return label
-    }()
-
-    private let percentLabel: UILabel = {
-        let label = UILabel()
-        label.font = AppFont.h3
-        label.textAlignment = .right
-        label.setContentHuggingPriority(.required, for: .horizontal)
-        return label
-    }()
-
-    private let barBackground: UIView = {
-        let view = UIView()
-        view.backgroundColor = AppColor.surfaceContainerHighest
-        view.layer.cornerRadius = 6
-        view.clipsToBounds = true
-        return view
-    }()
-
-    private let barFill: UIView = {
-        let view = UIView()
-        view.layer.cornerRadius = 6
-        return view
-    }()
-
-    private var barFillWidthConstraint: Constraint?
-
-    override func setupHierarchy() {
-        [nameLabel, percentLabel, barBackground].forEach { addSubview($0) }
-        barBackground.addSubview(barFill)
-    }
-
-    override func setupConstraints() {
-        nameLabel.snp.makeConstraints {
-            $0.leading.top.equalToSuperview()
-        }
-
-        percentLabel.snp.makeConstraints {
-            $0.trailing.equalToSuperview()
-            $0.centerY.equalTo(nameLabel)
-        }
-
-        barBackground.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview()
-            $0.top.equalTo(nameLabel.snp.bottom).offset(12)
-            $0.bottom.equalToSuperview()
-            $0.height.equalTo(12)
-        }
-
-        barFill.snp.makeConstraints {
-            $0.leading.top.bottom.equalToSuperview()
-            barFillWidthConstraint = $0.width.equalTo(barBackground).multipliedBy(0.0).constraint
-        }
-    }
-
-    func configure(with item: GenreRankItem) {
-        let color = rankColor(for: item.rank)
-        nameLabel.text = item.name
-        percentLabel.text = "\(Int((item.ratio * 100).rounded()))%"
-        percentLabel.textColor = color
-        barFill.backgroundColor = color
-
-        barFillWidthConstraint?.deactivate()
-        barFill.snp.makeConstraints {
-            barFillWidthConstraint = $0.width.equalTo(barBackground).multipliedBy(item.ratio).constraint
-        }
-    }
-
-    private func rankColor(for rank: Int) -> UIColor {
-        switch rank {
-        case 1: return AppColor.primaryRose
-        case 2: return AppColor.secondary
-        case 3: return AppColor.tertiary
-        default: return AppColor.onSurfaceVariant
-        }
+        genreBubbleChartView.configure(with: items)
     }
 }

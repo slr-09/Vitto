@@ -66,15 +66,17 @@ final class CoreDataStack {
     /// 이번 주 재생 기록에서 장르별 재생 횟수를 집계해 상위 N개 반환
     func fetchTopGenres(since date: Date, limit: Int) -> [(name: String, count: Int)] {
         let request = NSFetchRequest<PlaybackRecord>(entityName: "PlaybackRecord")
-        request.predicate = NSPredicate(format: "startedAt >= %@", date as NSDate)
+        request.predicate = NSPredicate(format: "startedAt >= %@ AND isSkipped == NO", date as NSDate)
 
         guard let records = try? context.fetch(request) else { return [] }
 
         var genreCount: [String: Int] = [:]
         for record in records {
             guard let genres = record.music?.genres else { continue }
-            for genre in genres where genre != "Music" {
-                genreCount[genre, default: 0] += 1
+            for genre in genres {
+                let trimmedGenre = genre.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !["Music", "음악"].contains(trimmedGenre) else { continue }
+                genreCount[trimmedGenre, default: 0] += 1
             }
         }
 

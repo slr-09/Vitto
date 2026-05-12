@@ -6,7 +6,7 @@ struct GenreRankItem {
     let rank: Int
     let name: String
     let count: Int
-    /// 1위 재생 횟수 대비 비율 (0.0 ~ 1.0)
+    /// 전체 장르 재생 횟수 대비 비율 (0.0 ~ 1.0)
     let ratio: Double
 }
 
@@ -31,10 +31,20 @@ final class StatsViewModel: ViewModelType {
 
         let topGenres = weekStart
             .map { date -> [GenreRankItem] in
-                let pairs = CoreDataStack.shared.fetchTopGenres(since: date, limit: 4)
+                let pairs = CoreDataStack.shared.fetchTopGenres(since: date, limit: Int.max)
                 let total = pairs.reduce(0) { $0 + $1.count }
                 guard total > 0 else { return [] }
-                return pairs.enumerated().map { index, pair in
+
+                let displayPairs: [(name: String, count: Int)]
+                if pairs.count > 4 {
+                    let topThree = Array(pairs.prefix(3))
+                    let otherCount = pairs.dropFirst(3).reduce(0) { $0 + $1.count }
+                    displayPairs = topThree + [(name: "기타", count: otherCount)]
+                } else {
+                    displayPairs = pairs
+                }
+
+                return displayPairs.enumerated().map { index, pair in
                     GenreRankItem(
                         rank: index + 1,
                         name: pair.name,
