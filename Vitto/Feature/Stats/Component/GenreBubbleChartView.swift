@@ -5,16 +5,34 @@ final class GenreBubbleChartView: BaseView {
 
     private var bubbleViews: [GenreBubbleView] = []
     private var items: [GenreRankItem] = []
+    private var itemSignature = ""
+    private var hasLaidOutBubbles = false
+    private var shouldAnimateNextLayout = false
 
     func configure(with items: [GenreRankItem]) {
-        self.items = items
-        bubbleViews.forEach { $0.removeFromSuperview() }
-        bubbleViews = items.map { item in
-            let bubble = GenreBubbleView()
+        let nextSignature = items.map { "\($0.rank):\($0.name):\($0.count)" }.joined(separator: "|")
+        guard nextSignature != itemSignature else { return }
+
+        let previousBubbles = Dictionary(uniqueKeysWithValues: bubbleViews.map { ($0.genreName, $0) })
+        let nextBubbles = items.map { item in
+            let bubble = previousBubbles[item.name] ?? GenreBubbleView()
+            if bubble.superview == nil {
+                bubble.alpha = 0
+                addSubview(bubble)
+            }
             bubble.configure(with: item, color: color(for: item.rank))
-            addSubview(bubble)
             return bubble
         }
+
+        let nextNames = Set(items.map(\.name))
+        bubbleViews
+            .filter { !nextNames.contains($0.genreName) }
+            .forEach { $0.removeFromSuperview() }
+
+        itemSignature = nextSignature
+        self.items = items
+        bubbleViews = nextBubbles
+        shouldAnimateNextLayout = hasLaidOutBubbles
         setNeedsLayout()
     }
 
@@ -32,16 +50,17 @@ final class GenreBubbleChartView: BaseView {
             bubble.setHomeCenter(center)
             guard !bubble.isDragging else { continue }
 
-            bubble.frame = CGRect(
+            let targetFrame = CGRect(
                 x: center.x - diameter / 2,
                 y: center.y - diameter / 2,
                 width: diameter,
                 height: diameter
             )
-            bubble.layer.cornerRadius = diameter / 2
-            bubble.layer.shadowPath = UIBezierPath(ovalIn: bubble.bounds).cgPath
-            bubble.startFloatingAnimation(index: index)
+            bubble.applyLayout(frame: targetFrame, animationIndex: index, animated: shouldAnimateNextLayout)
         }
+
+        hasLaidOutBubbles = true
+        shouldAnimateNextLayout = false
     }
 
     private func diameter(for ratio: Double) -> CGFloat {
@@ -120,6 +139,7 @@ private final class GenreBubbleView: BaseView {
     private var panStartCenter = CGPoint.zero
     private var homeCenter = CGPoint.zero
     private(set) var isDragging = false
+    private(set) var genreName = ""
 
     private let nameLabel: UILabel = {
         let label = UILabel()
@@ -170,6 +190,7 @@ private final class GenreBubbleView: BaseView {
     }
 
     func configure(with item: GenreRankItem, color: UIColor) {
+        genreName = item.name
         nameLabel.text = item.name
         percentLabel.text = "\(Int((item.ratio * 100).rounded()))%"
         backgroundColor = color.withAlphaComponent(0.82)
@@ -177,6 +198,37 @@ private final class GenreBubbleView: BaseView {
         layer.shadowOpacity = 0.26
         layer.shadowRadius = 14
         layer.shadowOffset = .zero
+    }
+
+    func applyLayout(frame targetFrame: CGRect, animationIndex: Int, animated: Bool) {
+        let targetRadius = targetFrame.width / 2
+        guard animated, self.frame != .zero, window != nil else {
+            frame = targetFrame
+            alpha = 1
+            layer.cornerRadius = targetRadius
+            layer.shadowPath = UIBezierPath(ovalIn: bounds).cgPath
+            startFloatingAnimation(index: animationIndex)
+            return
+        }
+
+        if let presentationLayer = layer.presentation() {
+            frame = presentationLayer.frame
+        }
+        layer.removeAnimation(forKey: floatingAnimationKey)
+        layer.transform = CATransform3DIdentity
+
+        UIView.animate(
+            withDuration: 0.35,
+            delay: 0,
+            options: [.allowUserInteraction, .beginFromCurrentState, .curveEaseInOut]
+        ) {
+            self.frame = targetFrame
+            self.alpha = 1
+            self.layer.cornerRadius = targetRadius
+            self.layer.shadowPath = UIBezierPath(ovalIn: self.bounds).cgPath
+        } completion: { _ in
+            self.startFloatingAnimation(index: animationIndex)
+        }
     }
 
     func startFloatingAnimation(index: Int) {
