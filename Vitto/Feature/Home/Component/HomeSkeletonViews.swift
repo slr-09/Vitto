@@ -86,7 +86,6 @@ final class HeroSkeletonView: UIView {
             $0.top.equalTo(subtitleBlock.snp.bottom).offset(AppSpacing.md)
             $0.leading.equalTo(titleBlock)
             $0.width.height.equalTo(64)
-            $0.bottom.equalToSuperview().inset(AppSpacing.xl)
         }
         buttonTextBlock.snp.makeConstraints {
             $0.centerY.equalTo(buttonBlock)
