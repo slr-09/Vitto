@@ -57,11 +57,6 @@ final class WeatherService {
             })
     }
 
-    /// 캐시 무효화 — 위치 변경 등 외부 신호 발생 시 호출
-    func invalidateCache() {
-        cacheQueue.sync { cached = nil }
-    }
-    
     /// Apple Weather 출처 표기 정보 조회
     func fetchAttribution() -> Observable<WeatherAttributionInfo> {
         Observable.async {
