@@ -34,8 +34,10 @@ final class HomeViewModel: ViewModelType {
         let isRecommendedLoadingRelay = BehaviorRelay<Bool>(value: true)
         let isTopSongsLoadingRelay = BehaviorRelay<Bool>(value: true)
 
-        let mood = input.viewDidLoad
-            .flatMapLatest { _ in tracker.currentMood }
+        // currentMood는 BehaviorRelay라 구독 즉시 현재값을 받고,
+        // foreground 복귀 등으로 갱신되면 자동으로 heroSongs까지 재계산됨
+        let mood = tracker.currentMood
+            .asObservable()
             .do(onNext: { _ in isHeroLoadingRelay.accept(false) })
             .asDriver(onErrorJustReturn: .sunny)
 

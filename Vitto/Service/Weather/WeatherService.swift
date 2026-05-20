@@ -21,21 +21,30 @@ final class WeatherService {
     
     private let weatherService = WeatherKit.WeatherService.shared
     private let locationService = LocationService.shared
-    
+
+    /// 캐시 TTL — 30분
+    private static let cacheTTL: TimeInterval = 30 * 60
+    private var cached: (snapshot: WeatherSnapshot, fetchedAt: Date)?
+    private let cacheQueue = DispatchQueue(label: "com.vitto.weatherService.cache")
+
     private init() {}
-    
+
     // MARK: - Public
-    
-    /// 현재 위치의 날씨 스냅샷을 1회 조회
+
+    /// 현재 위치의 날씨 스냅샷을 조회. TTL(30분) 이내면 캐시 반환.
     func fetchCurrentWeather() -> Observable<WeatherSnapshot> {
-        locationService.fetchCurrentLocation()
+        if let snapshot = validCachedSnapshot() {
+            return .just(snapshot)
+        }
+
+        return locationService.fetchCurrentLocation()
             .flatMap { [weatherService] location in
                 Observable<WeatherSnapshot>.async {
                     let weather = try await weatherService.weather(
                         for: location,
                         including: .current
                     )
-                    
+
                     return WeatherSnapshot(
                         condition: weather.condition.rawValue,
                         temperature: weather.temperature.converted(to: .celsius).value,
@@ -43,6 +52,14 @@ final class WeatherService {
                     )
                 }
             }
+            .do(onNext: { [weak self] snapshot in
+                self?.storeCache(snapshot)
+            })
+    }
+
+    /// 캐시 무효화 — 위치 변경 등 외부 신호 발생 시 호출
+    func invalidateCache() {
+        cacheQueue.sync { cached = nil }
     }
     
     /// Apple Weather 출처 표기 정보 조회
@@ -57,7 +74,19 @@ final class WeatherService {
     }
 
     // MARK: - Private
-    
+
+    private func validCachedSnapshot() -> WeatherSnapshot? {
+        cacheQueue.sync {
+            guard let cached else { return nil }
+            guard Date().timeIntervalSince(cached.fetchedAt) < Self.cacheTTL else { return nil }
+            return cached.snapshot
+        }
+    }
+
+    private func storeCache(_ snapshot: WeatherSnapshot) {
+        cacheQueue.sync { cached = (snapshot, Date()) }
+    }
+
     /// WeatherCondition enum → WeatherCategory 매핑
     private static func mapToMood(_ condition: WeatherCondition) -> WeatherCategory {
         switch condition {

@@ -1,4 +1,4 @@
-import Foundation
+import UIKit
 import RxSwift
 import RxCocoa
 
@@ -25,6 +25,7 @@ final class PlaybackTracker {
 
     private init() {
         observePlayback()
+        observeForeground()
         refreshMood()
     }
 
@@ -38,32 +39,41 @@ final class PlaybackTracker {
             .disposed(by: disposeBag)
     }
 
+    /// 앱이 foreground로 복귀할 때 날씨 무드를 다시 요청
+    /// (실제 API 호출 여부는 WeatherService의 TTL 캐시가 결정)
+    private func observeForeground() {
+        NotificationCenter.default.rx
+            .notification(UIApplication.willEnterForegroundNotification)
+            .subscribe(with: self) { owner, _ in
+                owner.refreshMood()
+            }
+            .disposed(by: disposeBag)
+    }
+
     // MARK: - 재생 관찰
 
     private func observePlayback() {
         // 재생 시작 시 벽시계 기록, 정지/일시정지 시 경과 시간 누적
         musicService.isPlaying
-            .subscribe(onNext: { [weak self] playing in
-                guard let self else { return }
+            .subscribe(with: self) { owner, playing in
                 if playing {
-                    self.playingStartWallTime = Date()
+                    owner.playingStartWallTime = Date()
                 } else {
-                    self.flushListenedTime()
+                    owner.flushListenedTime()
                 }
-            })
+            }
             .disposed(by: disposeBag)
 
         // 곡이 변경되면 이전 기록 종료 → 새 기록 시작
         musicService.currentMusic
             .distinctUntilChanged { $0?.musicID == $1?.musicID }
-            .subscribe(onNext: { [weak self] music in
-                guard let self else { return }
-                self.finalizeActiveRecord()
+            .subscribe(with: self) { owner, music in
+                owner.finalizeActiveRecord()
 
                 guard let music else { return }
-                self.lastTotalDurationMs = music.totalDurationMs
-                self.startTracking(music: music)
-            })
+                owner.lastTotalDurationMs = music.totalDurationMs
+                owner.startTracking(music: music)
+            }
             .disposed(by: disposeBag)
     }
 
