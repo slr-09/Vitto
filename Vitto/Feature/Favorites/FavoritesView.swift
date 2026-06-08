@@ -13,9 +13,10 @@ final class FavoritesView: BaseView {
     }()
 
     private let headerView = FavoritesHeaderView()
-    private let headerHeight: CGFloat = 250
+    private let headerHeight: CGFloat = 300
 
     var playAllButton: UIButton { headerView.playButton }
+    var shuffleButton: UIButton { headerView.shuffleButton }
 
     let emptyView: UIView = {
         let view = UIView()

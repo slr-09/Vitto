@@ -43,38 +43,77 @@ final class FavoritesHeaderView: BaseView {
         return label
     }()
 
-    let playButton: UIButton = {
+    let playButton = FavoritesHeaderView.makeActionButton(
+        title: "전체 재생",
+        systemImage: "play.fill",
+        foreground: AppColor.onPrimary,
+        background: AppColor.primaryRose,
+        glow: true
+    )
+
+    let shuffleButton = FavoritesHeaderView.makeActionButton(
+        title: "셔플",
+        systemImage: "shuffle",
+        foreground: AppColor.onSurface,
+        background: AppColor.onSurface.withAlphaComponent(0.18),
+        glow: false,
+        borderColor: AppColor.onSurface.withAlphaComponent(0.35)
+    )
+
+    /// 전체 재생 / 셔플 버튼을 동일한 캡슐 스타일로 생성
+    private static func makeActionButton(
+        title: String,
+        systemImage: String,
+        foreground: UIColor,
+        background: UIColor,
+        glow: Bool,
+        borderColor: UIColor? = nil
+    ) -> UIButton {
         var config = UIButton.Configuration.filled()
-        config.image = UIImage(systemName: "play.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .bold))
-        config.title = "전체 재생"
+        config.image = UIImage(systemName: systemImage, withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .bold))
+        config.title = title
         config.imagePadding = 8
-        config.baseForegroundColor = AppColor.onPrimary
-        config.baseBackgroundColor = AppColor.primaryRose
+        config.baseForegroundColor = foreground
+        config.baseBackgroundColor = background
         config.cornerStyle = .capsule
-        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 24)
+        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20)
         config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
             var out = incoming
             out.font = AppFont.labelLarge
             return out
         }
+        if let borderColor {
+            config.background.strokeColor = borderColor
+            config.background.strokeWidth = 1
+        }
         let btn = UIButton(configuration: config)
-        btn.applyStrongNeonGlow(color: AppColor.primaryRose)
+        if glow { btn.applyStrongNeonGlow(color: background) }
         return btn
+    }
+
+    private let buttonStack: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .horizontal
+        sv.spacing = AppSpacing.sm
+        sv.alignment = .fill
+        sv.distribution = .fillEqually
+        return sv
     }()
 
     override func setupHierarchy() {
         addSubview(containerView)
         containerView.layer.insertSublayer(gradientLayer, at: 0)
         iconContainer.addSubview(iconView)
-        [iconContainer, titleLabel, subtitleLabel, playButton].forEach { containerView.addSubview($0) }
+        [playButton, shuffleButton].forEach { buttonStack.addArrangedSubview($0) }
+        [iconContainer, titleLabel, subtitleLabel, buttonStack].forEach { containerView.addSubview($0) }
     }
 
     override func setupConstraints() {
         containerView.snp.makeConstraints {
             $0.top.equalToSuperview()
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
-            // 콘텐츠만 감싸도록 bottom을 subtitle 기준으로 → 헤더 하단에 곡 목록과의 여백이 생김
-            $0.bottom.equalTo(subtitleLabel.snp.bottom).offset(AppSpacing.xl)
+            // 콘텐츠(버튼 줄까지)만 감싸도록 → 헤더 하단에 곡 목록과의 여백이 생김
+            $0.bottom.equalTo(buttonStack.snp.bottom).offset(AppSpacing.xl)
         }
 
         iconContainer.snp.makeConstraints {
@@ -90,18 +129,18 @@ final class FavoritesHeaderView: BaseView {
         titleLabel.snp.makeConstraints {
             $0.top.equalTo(iconContainer.snp.bottom).offset(AppSpacing.md)
             $0.leading.equalToSuperview().inset(AppSpacing.xl)
-            $0.trailing.lessThanOrEqualTo(playButton.snp.leading).offset(-AppSpacing.md)
+            $0.trailing.lessThanOrEqualToSuperview().inset(AppSpacing.xl)
         }
 
         subtitleLabel.snp.makeConstraints {
             $0.top.equalTo(titleLabel.snp.bottom).offset(AppSpacing.xs)
             $0.leading.equalTo(titleLabel)
-            $0.trailing.lessThanOrEqualTo(playButton.snp.leading).offset(-AppSpacing.md)
+            $0.trailing.lessThanOrEqualToSuperview().inset(AppSpacing.xl)
         }
 
-        playButton.snp.makeConstraints {
-            $0.trailing.equalToSuperview().inset(AppSpacing.xl)
-            $0.bottom.equalTo(subtitleLabel)
+        buttonStack.snp.makeConstraints {
+            $0.top.equalTo(subtitleLabel.snp.bottom).offset(AppSpacing.lg)
+            $0.leading.trailing.equalToSuperview().inset(AppSpacing.xl)
         }
     }
 

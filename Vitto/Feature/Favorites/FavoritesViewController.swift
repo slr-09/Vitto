@@ -23,7 +23,8 @@ final class FavoritesViewController: BaseViewController {
         let input = FavoritesViewModel.Input(
             viewDidLoad: Observable.just(()),
             itemSelected: itemSelected,
-            playAllTapped: favoritesView.playAllButton.rx.tap.asObservable()
+            playAllTapped: favoritesView.playAllButton.rx.tap.asObservable(),
+            shuffleTapped: favoritesView.shuffleButton.rx.tap.asObservable()
         )
 
         let output = viewModel.transform(input: input)

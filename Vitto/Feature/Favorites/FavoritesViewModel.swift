@@ -8,6 +8,7 @@ final class FavoritesViewModel: ViewModelType {
         let viewDidLoad: Observable<Void>
         let itemSelected: Observable<Music>
         let playAllTapped: Observable<Void>
+        let shuffleTapped: Observable<Void>
     }
 
     struct Output {
@@ -44,6 +45,19 @@ final class FavoritesViewModel: ViewModelType {
             .filter { !$0.isEmpty }
             .flatMapLatest { songs -> Observable<Void> in
                 MusicService.shared.playQueue(musics: songs, startIndex: 0)
+                    .catch { error in
+                        print("재생 에러: \(error)")
+                        return .empty()
+                    }
+            }
+            .subscribe()
+            .disposed(by: disposeBag)
+
+        input.shuffleTapped
+            .withLatestFrom(songs.asObservable())
+            .filter { !$0.isEmpty }
+            .flatMapLatest { songs -> Observable<Void> in
+                MusicService.shared.playQueue(musics: songs.shuffled(), startIndex: 0)
                     .catch { error in
                         print("재생 에러: \(error)")
                         return .empty()
