@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import CoreData
 import MusicKit
 import AVFoundation
 import RxSwift
@@ -55,6 +56,9 @@ final class MusicService {
     let currentIndex = BehaviorRelay<Int>(value: 0)
     let hasNext = BehaviorRelay<Bool>(value: false)
     let hasPrevious = BehaviorRelay<Bool>(value: false)
+
+    // MARK: - Favorite State (좋아요 변경 시 발행)
+    let favoriteDidChange = PublishRelay<Void>()
 
     /// 구독자용: skipToIndex에서 네트워크 없이 재사용하기 위한 Song 캐시
     private var cachedSongs: [Song] = []
@@ -467,6 +471,32 @@ final class MusicService {
     private func stopProgressTimer() {
         progressTimer?.invalidate()
         progressTimer = nil
+    }
+
+    // MARK: - Favorite
+
+    /// 곡이 즐겨찾기(좋아요) 상태인지 조회
+    func isFavorite(musicID: String) -> Bool {
+        let ctx = CoreDataStack.shared.context
+        let request = NSFetchRequest<MusicEntity>(entityName: "MusicEntity")
+        request.predicate = NSPredicate(format: "musicID == %@", musicID)
+        request.fetchLimit = 1
+        return (try? ctx.fetch(request).first)?.favoritedAt != nil
+    }
+
+    /// 즐겨찾기 토글 후 변경된 상태 반환 (true: 좋아요됨)
+    ///
+    /// 앱 내부(CoreData)에만 저장한다. Apple Music API는 즐겨찾기 '해제'를 지원하지 않아
+    /// 양방향 동기화가 불가능하므로 로컬 저장만 수행한다.
+    @discardableResult
+    func toggleFavorite(_ music: Music) -> Bool {
+        let ctx = CoreDataStack.shared.context
+        let entity = MusicEntity.findOrCreate(from: music, in: ctx)
+        let newState = entity.favoritedAt == nil
+        entity.favoritedAt = newState ? Date() : nil
+        CoreDataStack.shared.saveContext()
+        favoriteDidChange.accept(())
+        return newState
     }
 
 }

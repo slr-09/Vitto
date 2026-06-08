@@ -9,6 +9,7 @@ class MusicEntity: NSManagedObject {
     @NSManaged var isrc: String?
     @NSManaged var artworkUrl: String?
     @NSManaged var cachedAt: Date?
+    @NSManaged var favoritedAt: Date?
     @NSManaged var genres: [String]?
     @NSManaged var records: NSSet?
     @NSManaged var playlistItems: NSSet?

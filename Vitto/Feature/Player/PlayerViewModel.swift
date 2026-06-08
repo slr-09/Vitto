@@ -17,6 +17,7 @@ final class PlayerViewModel {
         let skipNextTap: Observable<Void>
         let sliderChanged: Observable<Float>    // 드래그 중 (seek용)
         let sliderTouchUp: Observable<Float>    // 손 뗄 때 (실제 seek)
+        let likeTap: Observable<Void>           // 좋아요 버튼 탭
     }
 
     // MARK: - Output
@@ -27,6 +28,7 @@ final class PlayerViewModel {
         let currentTimeText: Driver<String>
         let seekingTimeText: Driver<String>     // 슬라이더 드래그 중 표시할 시간
         let totalTimeText: Driver<String>
+        let isFavorite: Driver<Bool>            // 현재곡 좋아요 여부
     }
 
     // MARK: - Private
@@ -81,6 +83,25 @@ final class PlayerViewModel {
             }
             .disposed(by: disposeBag)
 
+        // 좋아요 토글
+        input.likeTap
+            .bind(with: self) { _, _ in
+                guard let music = musicService.currentMusic.value else { return }
+                musicService.toggleFavorite(music)
+            }
+            .disposed(by: disposeBag)
+
+        // 현재곡 좋아요 여부 (곡 변경 또는 좋아요 변경 시 재계산)
+        let isFavorite = Observable.merge(
+            musicService.currentMusic.map { _ in () },
+            musicService.favoriteDidChange.asObservable()
+        )
+        .map { _ -> Bool in
+            guard let id = musicService.currentMusic.value?.musicID else { return false }
+            return musicService.isFavorite(musicID: id)
+        }
+        .asDriver(onErrorJustReturn: false)
+
         // 진행률
         let progress = Observable.combineLatest(
             musicService.playbackTime,
@@ -121,7 +142,8 @@ final class PlayerViewModel {
             progress: progress,
             currentTimeText: currentTimeText,
             seekingTimeText: seekingTimeText,
-            totalTimeText: totalTimeText
+            totalTimeText: totalTimeText,
+            isFavorite: isFavorite
         )
     }
 }

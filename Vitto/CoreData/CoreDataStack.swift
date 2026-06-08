@@ -97,6 +97,11 @@ final class CoreDataStack {
         cachedAt.name = "cachedAt"
         cachedAt.attributeType = .dateAttributeType
 
+        let favoritedAt = NSAttributeDescription()
+        favoritedAt.name = "favoritedAt"
+        favoritedAt.attributeType = .dateAttributeType
+        favoritedAt.isOptional = true
+
         // MARK: PlaybackRecord
         let recordEntity = NSEntityDescription()
         recordEntity.name = "PlaybackRecord"
@@ -273,7 +278,7 @@ final class CoreDataStack {
         // Entity에 속성 할당
         musicEntity.properties = [
             musicID, title, artist, albumTitle,
-            totalDurationMs, isrc, artworkUrl, cachedAt,
+            totalDurationMs, isrc, artworkUrl, cachedAt, favoritedAt,
             genres,
             musicToRecords, musicToPlaylistItems
         ]

@@ -40,7 +40,8 @@ final class PlayerViewController: BaseViewController {
             skipPrevTap: playerView.prevButton.rx.tap.asObservable(),
             skipNextTap: playerView.nextButton.rx.tap.asObservable(),
             sliderChanged: playerView.slider.rx.value.changed.asObservable(),
-            sliderTouchUp: sliderTouchUpRelay.asObservable()
+            sliderTouchUp: sliderTouchUpRelay.asObservable(),
+            likeTap: playerView.likeButton.rx.tap.asObservable()
         )
         let output = viewModel.transform(input: input)
 
@@ -63,6 +64,13 @@ final class PlayerViewController: BaseViewController {
         output.music
             .drive(with: self) { owner, music in
                 owner.playerView.configure(with: music)
+            }
+            .disposed(by: disposeBag)
+
+        // 좋아요 상태 → 하트 버튼
+        output.isFavorite
+            .drive(with: self) { owner, isFavorite in
+                owner.playerView.setFavorite(isFavorite)
             }
             .disposed(by: disposeBag)
 

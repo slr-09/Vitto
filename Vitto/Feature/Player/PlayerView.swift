@@ -76,6 +76,16 @@ final class PlayerView: BaseView {
         return sv
     }()
 
+    let likeButton: UIButton = {
+        let btn = UIButton(type: .system)
+        let cfg = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
+        btn.setImage(UIImage(systemName: "heart", withConfiguration: cfg), for: .normal)
+        btn.tintColor = AppColor.onSurface
+        btn.setContentHuggingPriority(.required, for: .horizontal)
+        btn.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return btn
+    }()
+
     private let titleLabel: UILabel = {
         let lbl = UILabel()
         lbl.font = AppFont.displayMD
@@ -242,6 +252,8 @@ final class PlayerView: BaseView {
         labelsStack.addArrangedSubview(titleLabel)
         labelsStack.addArrangedSubview(artistLabel)
         trackInfoStack.addArrangedSubview(labelsStack)
+        trackInfoStack.addArrangedSubview(likeButton)
+        trackInfoStack.spacing = AppSpacing.sm
 
         [prevButton, playPauseButton, nextButton].forEach { controlStack.addArrangedSubview($0) }
     }
@@ -518,6 +530,13 @@ final class PlayerView: BaseView {
         let cfg = UIImage.SymbolConfiguration(pointSize: prevNextPointSize, weight: .medium)
         prevButton.setImage(UIImage(systemName: "backward.fill", withConfiguration: cfg), for: .normal)
         nextButton.setImage(UIImage(systemName: "forward.fill", withConfiguration: cfg), for: .normal)
+    }
+
+    func setFavorite(_ isFavorite: Bool) {
+        let name = isFavorite ? "heart.fill" : "heart"
+        let cfg = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
+        likeButton.setImage(UIImage(systemName: name, withConfiguration: cfg), for: .normal)
+        likeButton.tintColor = isFavorite ? AppColor.primaryRose : AppColor.onSurface
     }
 
     func setPlayingState(_ isPlaying: Bool) {
