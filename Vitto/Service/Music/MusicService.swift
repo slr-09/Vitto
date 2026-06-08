@@ -499,6 +499,25 @@ final class MusicService {
         return newState
     }
 
+    /// 좋아요한 곡 목록 (favoritedAt 내림차순)
+    func fetchFavorites() -> Observable<[Music]> {
+        Observable.create { observer in
+            let ctx = CoreDataStack.shared.context
+            let request = NSFetchRequest<MusicEntity>(entityName: "MusicEntity")
+            request.predicate = NSPredicate(format: "favoritedAt != nil")
+            request.sortDescriptors = [NSSortDescriptor(key: "favoritedAt", ascending: false)]
+
+            do {
+                let entities = try ctx.fetch(request)
+                observer.onNext(entities.map { $0.toMusic() })
+                observer.onCompleted()
+            } catch {
+                observer.onError(error)
+            }
+            return Disposables.create()
+        }
+    }
+
 }
 
 // MARK: - Song → Music 변환

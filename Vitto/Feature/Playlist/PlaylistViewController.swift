@@ -66,6 +66,26 @@ final class PlaylistViewController: BaseViewController {
                 self?.navigationController?.pushViewController(detailVC, animated: true)
             })
             .disposed(by: disposeBag)
+
+        // 좋아요 카드 탭 → 좋아요한 곡 목록
+        playlistView.favoritesCard.rx.controlEvent(.touchUpInside)
+            .subscribe(onNext: { [weak self] in
+                self?.navigationController?.pushViewController(FavoritesViewController(), animated: true)
+            })
+            .disposed(by: disposeBag)
+
+        // 좋아요 곡 수 (좋아요 변경 시 자동 갱신)
+        Observable.merge(
+                Observable.just(()),
+                MusicService.shared.favoriteDidChange.asObservable()
+            )
+            .flatMapLatest { MusicService.shared.fetchFavorites() }
+            .map { $0.count }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] count in
+                self?.playlistView.updateFavoritesCount(count)
+            })
+            .disposed(by: disposeBag)
     }
 
     private func showCreatePlaylistAlert() {
