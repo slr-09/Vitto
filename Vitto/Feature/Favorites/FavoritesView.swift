@@ -7,8 +7,9 @@ final class FavoritesView: BaseView {
         let tv = UITableView()
         tv.backgroundColor = .clear
         tv.separatorStyle = .none
-        tv.rowHeight = 64
-        tv.register(SearchResultCell.self, forCellReuseIdentifier: SearchResultCell.identifier)
+        tv.rowHeight = UITableView.automaticDimension
+        tv.estimatedRowHeight = 84
+        tv.register(FavoriteSongCell.self, forCellReuseIdentifier: FavoriteSongCell.identifier)
         return tv
     }()
 

@@ -31,8 +31,8 @@ final class FavoritesViewController: BaseViewController {
 
         output.songs
             .drive(favoritesView.tableView.rx.items(
-                cellIdentifier: SearchResultCell.identifier,
-                cellType: SearchResultCell.self
+                cellIdentifier: FavoriteSongCell.identifier,
+                cellType: FavoriteSongCell.self
             )) { [weak self] _, music, cell in
                 cell.configure(with: music)
                 cell.onMoreButtonTapped = {
