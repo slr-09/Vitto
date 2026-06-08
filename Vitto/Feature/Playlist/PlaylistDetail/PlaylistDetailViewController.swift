@@ -53,6 +53,7 @@ final class PlaylistDetailViewController: BaseViewController {
                 cellType: SearchResultCell.self
             )) { [weak self] _, music, cell in
                 cell.configure(with: music)
+                cell.bindNowPlaying(musicID: music.musicID)
                 cell.onMoreButtonTapped = {
                     guard let self else { return }
                     MusicActionSheetPresenter.show(for: music, from: self, disposeBag: self.disposeBag)

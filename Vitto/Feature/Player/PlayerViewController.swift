@@ -237,7 +237,7 @@ extension PlayerViewController: UITableViewDataSource, UITableViewDelegate {
             withIdentifier: SearchResultCell.identifier, for: indexPath
         ) as? SearchResultCell else { return UITableViewCell() }
         cell.configure(with: queueItems[indexPath.row])
-        cell.setCurrentlyPlaying(indexPath.row == queueCurrentIndex)
+        cell.bindNowPlaying(musicID: queueItems[indexPath.row].musicID)
         cell.setQueueMode(true)
         return cell
     }

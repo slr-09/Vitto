@@ -32,6 +32,16 @@ final class SearchResultCell: BaseTableViewCell {
         return iv
     }()
 
+    private let nowPlayingOverlay: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.45)
+        view.layer.cornerRadius = AppSpacing.Radius.sm
+        view.isHidden = true
+        return view
+    }()
+
+    private let equalizerView = EqualizerView(color: AppColor.secondary)
+
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = AppFont.h4
@@ -66,6 +76,7 @@ final class SearchResultCell: BaseTableViewCell {
     var onMoreButtonTapped: (() -> Void)?
 
     private let disposeBag = DisposeBag()
+    private var stateDisposeBag = DisposeBag()
 
     // MARK: - Setup
     private var artworkLeadingToSuperview: Constraint?
@@ -85,9 +96,10 @@ final class SearchResultCell: BaseTableViewCell {
     }
 
     override func setupHierarchy() {
-        [rankLabel, artworkImageView, titleLabel, artistLabel, durationLabel, moreButton].forEach {
+        [rankLabel, artworkImageView, nowPlayingOverlay, titleLabel, artistLabel, durationLabel, moreButton].forEach {
             contentView.addSubview($0)
         }
+        nowPlayingOverlay.addSubview(equalizerView)
     }
 
     override func setupConstraints() {
@@ -104,6 +116,15 @@ final class SearchResultCell: BaseTableViewCell {
             $0.size.equalTo(48)
         }
         artworkLeadingToRank?.deactivate()
+
+        nowPlayingOverlay.snp.makeConstraints {
+            $0.edges.equalTo(artworkImageView)
+        }
+
+        equalizerView.snp.makeConstraints {
+            $0.center.equalToSuperview()
+            $0.height.equalTo(18)
+        }
 
         moreButton.snp.makeConstraints {
             $0.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal - 10)
@@ -143,8 +164,33 @@ final class SearchResultCell: BaseTableViewCell {
         }
     }
 
-    func setCurrentlyPlaying(_ isCurrent: Bool) {
+    /// 현재 재생 곡을 이퀄라이저 애니메이션으로 실시간 표시 (opt-in)
+    func bindNowPlaying(musicID: String) {
+        stateDisposeBag = DisposeBag()
+        Observable.combineLatest(
+                MusicService.shared.currentMusic,
+                MusicService.shared.isPlaying
+            )
+            .map { current, isPlaying in
+                (current?.musicID == musicID, isPlaying)
+            }
+            .distinctUntilChanged { $0 == $1 }
+            .observe(on: MainScheduler.instance)
+            .subscribe(with: self) { owner, state in
+                owner.setNowPlaying(state.0, isPlaying: state.1)
+            }
+            .disposed(by: stateDisposeBag)
+    }
+
+    private func setNowPlaying(_ isCurrent: Bool, isPlaying: Bool) {
+        nowPlayingOverlay.isHidden = !isCurrent
         titleLabel.textColor = isCurrent ? AppColor.secondary : AppColor.onBackground
+
+        if isCurrent && isPlaying {
+            equalizerView.startAnimating()
+        } else {
+            equalizerView.stopAnimating()
+        }
     }
 
     // queue 모드: moreButton 숨김 (시스템 reorder control이 핸들 역할)
@@ -163,6 +209,9 @@ final class SearchResultCell: BaseTableViewCell {
         artworkLeadingToRank?.deactivate()
         artworkLeadingToSuperview?.activate()
         moreButton.isHidden = false
+        stateDisposeBag = DisposeBag()
+        equalizerView.stopAnimating()
+        nowPlayingOverlay.isHidden = true
     }
 
     // MARK: - Configure
